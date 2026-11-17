@@ -1,0 +1,1400 @@
+/*
+ * MCP Client UI. Plain CSS on theme variables; the server writes the user's
+ * theme into a <style> block (see web::theme), these are the Light defaults.
+ */
+:root {
+	--color-primary: #570df8;
+	--color-secondary: #f000b8;
+	--color-accent: #37cdbe;
+	--color-neutral: #3d4451;
+	--color-base-100: #ffffff;
+	--color-base-200: #f9fafb;
+	--color-base-300: #d1d5db;
+	--color-base-content: #1f2937;
+	--color-info: #3abff8;
+	--color-success: #36d399;
+	--color-warning: #fbbd23;
+	--color-error: #f87272;
+	--color-primary-content: #ffffff;
+
+	--radius: 0.625rem;
+	--radius-sm: 0.375rem;
+	--font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	--muted: color-mix(in oklab, var(--color-base-content) 65%, transparent);
+	--faint: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+	--border: var(--color-base-300);
+	color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	min-height: 100dvh;
+	font-family: var(--font);
+	font-size: 0.9375rem;
+	line-height: 1.5;
+	color: var(--color-base-content);
+	background: var(--color-base-200);
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+dl,
+dd,
+figure {
+	margin: 0;
+}
+
+h1 {
+	font-size: 1.75rem;
+	line-height: 1.2;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	text-wrap: balance;
+}
+
+h2 {
+	font-size: 1.0625rem;
+	font-weight: 600;
+}
+
+a {
+	color: var(--color-primary);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+}
+
+code,
+pre,
+.mono {
+	font-family: var(--font-mono);
+	font-size: 0.875em;
+}
+
+pre {
+	white-space: pre-wrap;
+	word-break: break-word;
+	margin: 0;
+}
+
+:focus-visible {
+	outline: 2px solid var(--color-primary);
+	outline-offset: 2px;
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.muted {
+	color: var(--muted);
+}
+
+.faint {
+	color: var(--faint);
+}
+
+.small {
+	font-size: 0.8125rem;
+}
+
+.tiny {
+	font-size: 0.75rem;
+}
+
+.nums {
+	font-variant-numeric: tabular-nums;
+}
+
+.truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.stack {
+	display: grid;
+	gap: var(--gap, 1rem);
+}
+
+.row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--gap, 0.5rem);
+}
+
+.spacer {
+	flex: 1;
+}
+
+/* ---------- App shell ---------- */
+
+.shell-header {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	background: var(--color-base-100);
+	border-bottom: 1px solid var(--border);
+}
+
+.shell-header-inner,
+.page {
+	max-width: 76rem;
+	margin-inline: auto;
+	padding-inline: 1rem;
+}
+
+.shell-header-inner {
+	display: flex;
+	align-items: center;
+	gap: 1.5rem;
+	height: 3.75rem;
+}
+
+.brand {
+	font-weight: 700;
+	font-size: 1.0625rem;
+	color: var(--color-base-content);
+	text-decoration: none;
+}
+
+.nav {
+	display: flex;
+	gap: 0.25rem;
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.nav a {
+	padding: 0.4rem 0.75rem;
+	border-radius: var(--radius-sm);
+	color: var(--muted);
+	text-decoration: none;
+	font-size: 0.875rem;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.nav a:hover {
+	color: var(--color-base-content);
+	background: var(--color-base-200);
+}
+
+.nav a[aria-current='page'] {
+	color: var(--color-primary);
+	background: color-mix(in oklab, var(--color-primary) 10%, transparent);
+}
+
+.page {
+	padding-block: 2rem 4rem;
+}
+
+.page-header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-bottom: 1.5rem;
+}
+
+.page-header p {
+	margin-top: 0.375rem;
+	color: var(--muted);
+}
+
+/* User menu (popover anchored to its trigger) */
+.user-menu-trigger {
+	anchor-name: --user-menu;
+}
+
+.user-menu {
+	position: fixed;
+	inset: auto;
+	margin: 0;
+	min-width: 12rem;
+	padding: 0.375rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+	color: var(--color-base-content);
+	box-shadow: 0 10px 30px rgb(0 0 0 / 0.12);
+}
+
+@supports (position-area: block-end) {
+	.user-menu {
+		position-anchor: --user-menu;
+		position-area: block-end span-inline-start;
+		position-try-fallbacks: flip-block, flip-inline;
+		margin-block: 0.375rem;
+	}
+}
+
+.user-menu :is(a, button) {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	width: 100%;
+	padding: 0.5rem 0.625rem;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: none;
+	color: inherit;
+	font: inherit;
+	font-size: 0.875rem;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.user-menu :is(a, button):hover {
+	background: var(--color-base-200);
+}
+
+.user-menu .danger {
+	color: var(--color-error);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	min-height: 2.25rem;
+	padding: 0.4rem 0.9rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--color-base-100);
+	color: var(--color-base-content);
+	font: inherit;
+	font-size: 0.875rem;
+	font-weight: 600;
+	line-height: 1.2;
+	text-decoration: none;
+	cursor: pointer;
+	white-space: nowrap;
+	transition:
+		background-color 120ms ease-out,
+		border-color 120ms ease-out,
+		color 120ms ease-out;
+}
+
+.btn:hover {
+	background: var(--color-base-200);
+}
+
+.btn:disabled,
+.btn[aria-disabled='true'] {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.btn-primary {
+	background: var(--color-primary);
+	border-color: var(--color-primary);
+	color: var(--color-primary-content);
+}
+
+.btn-primary:hover {
+	background: color-mix(in oklab, var(--color-primary) 88%, black);
+}
+
+.btn-ghost {
+	border-color: transparent;
+	background: transparent;
+}
+
+.btn-sm {
+	min-height: 1.875rem;
+	padding: 0.25rem 0.65rem;
+	font-size: 0.8125rem;
+}
+
+.btn-icon {
+	padding: 0;
+	width: 2rem;
+	min-height: 2rem;
+}
+
+.btn-danger:hover {
+	color: var(--color-error);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.btn:active:not(:disabled) {
+		scale: 0.97;
+	}
+}
+
+.btn-group {
+	display: inline-flex;
+}
+
+.btn-group > .btn {
+	border-radius: 0;
+}
+
+.btn-group > .btn:first-child {
+	border-start-start-radius: var(--radius-sm);
+	border-end-start-radius: var(--radius-sm);
+}
+
+.btn-group > .btn:last-child {
+	border-start-end-radius: var(--radius-sm);
+	border-end-end-radius: var(--radius-sm);
+}
+
+.btn-group > .btn + .btn {
+	margin-inline-start: -1px;
+}
+
+.divider-v {
+	width: 1px;
+	height: 1.5rem;
+	background: var(--border);
+}
+
+.icon {
+	width: 1rem;
+	height: 1rem;
+	flex: none;
+}
+
+.spinner {
+	width: 0.9rem;
+	height: 0.9rem;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.spinner {
+		animation-duration: 3s;
+	}
+}
+
+@keyframes spin {
+	to {
+		rotate: 1turn;
+	}
+}
+
+/* htmx: show spinners only while a request runs */
+.htmx-indicator {
+	display: none;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+	display: inline-block;
+}
+
+/* ---------- Cards and lists ---------- */
+
+.list {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 1rem;
+	padding: 0;
+	list-style: none;
+}
+
+.list > li {
+	container-type: inline-size;
+}
+
+.card {
+	display: grid;
+	gap: 1rem 1.5rem;
+	padding: 1.25rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+}
+
+.card > header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.card > footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+@container (min-width: 48rem) {
+	.card {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+
+	.card > :not(footer):not(.card-wide) {
+		grid-column: 1;
+	}
+
+	.card > footer {
+		grid-column: 2;
+		grid-row: 1 / span 2;
+		align-self: start;
+		justify-content: flex-end;
+	}
+
+	.card > .card-wide {
+		grid-column: 1 / -1;
+	}
+}
+
+.details {
+	display: grid;
+	gap: 0.75rem 1.5rem;
+	font-size: 0.875rem;
+}
+
+@container (min-width: 36rem) {
+	.details {
+		grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1.2fr);
+	}
+}
+
+.details dt {
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--faint);
+}
+
+.panel {
+	padding: 1.25rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+}
+
+.empty {
+	padding: 3rem 1.5rem;
+	border: 1px dashed var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+	text-align: center;
+}
+
+.empty p {
+	max-width: 32rem;
+	margin: 0.5rem auto 1.5rem;
+	color: var(--muted);
+	font-size: 0.875rem;
+}
+
+/* ---------- Pills ---------- */
+
+.pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.1rem 0.6rem;
+	border-radius: 999px;
+	background: var(--color-base-200);
+	color: var(--muted);
+	font-size: 0.75rem;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.pill-primary {
+	background: color-mix(in oklab, var(--color-primary) 14%, transparent);
+	color: var(--color-base-content);
+}
+
+.pill-success {
+	background: color-mix(in oklab, var(--color-success) 18%, transparent);
+	color: var(--color-base-content);
+}
+
+.pill-error {
+	background: color-mix(in oklab, var(--color-error) 16%, transparent);
+	color: var(--color-base-content);
+}
+
+.pill-info {
+	background: color-mix(in oklab, var(--color-info) 16%, transparent);
+	color: var(--color-base-content);
+}
+
+.dot {
+	width: 0.5rem;
+	height: 0.5rem;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+/* ---------- Messages ---------- */
+
+.alert {
+	padding: 0.75rem 1rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+	font-size: 0.875rem;
+}
+
+.alert:empty {
+	display: none;
+}
+
+.alert-error {
+	border-color: color-mix(in oklab, var(--color-error) 35%, transparent);
+	background: color-mix(in oklab, var(--color-error) 9%, var(--color-base-100));
+}
+
+.alert-success {
+	border-color: color-mix(in oklab, var(--color-success) 40%, transparent);
+	background: color-mix(in oklab, var(--color-success) 10%, var(--color-base-100));
+}
+
+/* ---------- Forms ---------- */
+
+.field {
+	display: grid;
+	gap: 0.3rem;
+}
+
+.field > label,
+.label {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--muted);
+}
+
+.input,
+.select,
+.textarea {
+	width: 100%;
+	min-height: 2.375rem;
+	padding: 0.45rem 0.7rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--color-base-100);
+	color: var(--color-base-content);
+	font: inherit;
+	font-size: 0.875rem;
+}
+
+.textarea {
+	resize: vertical;
+}
+
+.input:focus-visible,
+.select:focus-visible,
+.textarea:focus-visible {
+	outline: 2px solid color-mix(in oklab, var(--color-primary) 60%, transparent);
+	outline-offset: 0;
+	border-color: var(--color-primary);
+}
+
+.input[aria-invalid='true'] {
+	border-color: var(--color-error);
+}
+
+.input-sm {
+	min-height: 1.875rem;
+	padding: 0.2rem 0.5rem;
+}
+
+.help {
+	font-size: 0.75rem;
+	color: var(--faint);
+}
+
+.help.error,
+.error-text {
+	color: var(--color-error);
+}
+
+.field-row {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.field-row > :first-child {
+	flex: 1;
+	min-width: 0;
+}
+
+/* ---------- Dialogs ---------- */
+
+dialog.modal {
+	width: min(32rem, calc(100% - 2rem));
+	max-height: 90dvh;
+	margin: auto;
+	padding: 1.5rem;
+	overflow-y: auto;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+	color: var(--color-base-content);
+	box-shadow: 0 20px 60px rgb(0 0 0 / 0.2);
+}
+
+dialog.modal-lg {
+	width: min(44rem, calc(100% - 2rem));
+}
+
+dialog.modal:modal {
+	overscroll-behavior: contain;
+}
+
+dialog.modal::backdrop {
+	background: rgb(0 0 0 / 0.45);
+	backdrop-filter: blur(2px);
+	overflow: hidden;
+	overscroll-behavior: contain;
+}
+
+dialog.modal h2 {
+	font-size: 1.25rem;
+	margin-bottom: 1rem;
+}
+
+.dialog-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	margin-top: 1.25rem;
+}
+
+/* ---------- Auth pages ---------- */
+
+.auth {
+	display: grid;
+	place-items: center;
+	min-height: 100dvh;
+	padding: 1rem;
+}
+
+.auth-card {
+	width: min(24rem, 100%);
+	display: grid;
+	gap: 1rem;
+	padding: 1.75rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+}
+
+.auth-card h1 {
+	font-size: 1.5rem;
+}
+
+/* ---------- Dashboard ---------- */
+
+.dash-grid {
+	display: grid;
+	gap: 1rem;
+	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.dash-card {
+	display: grid;
+	gap: 0.75rem;
+	padding: 1.25rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+	color: inherit;
+	text-decoration: none;
+	transition:
+		border-color 150ms ease-out,
+		box-shadow 150ms ease-out;
+}
+
+.dash-card:hover {
+	border-color: color-mix(in oklab, var(--color-primary) 45%, transparent);
+	box-shadow: 0 6px 20px rgb(0 0 0 / 0.08);
+}
+
+.dash-card .count {
+	font-size: 2rem;
+	font-weight: 700;
+	line-height: 1;
+	color: var(--color-primary);
+}
+
+.dash-card .go {
+	color: var(--color-primary);
+	font-size: 0.875rem;
+	font-weight: 600;
+}
+
+.checklist {
+	display: grid;
+	gap: 0.25rem;
+	padding: 0;
+	list-style: none;
+}
+
+.checklist a {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.5rem;
+	border-radius: var(--radius-sm);
+	color: inherit;
+	text-decoration: none;
+}
+
+.checklist a:hover {
+	background: var(--color-base-200);
+}
+
+.check {
+	display: grid;
+	place-items: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	border: 1px solid var(--border);
+	border-radius: 50%;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	flex: none;
+}
+
+.check.done {
+	border-color: var(--color-success);
+	background: var(--color-success);
+	color: #fff;
+}
+
+.done-text {
+	text-decoration: line-through;
+	text-decoration-color: var(--faint);
+	color: var(--muted);
+}
+
+/* ---------- Status line under cards ---------- */
+
+.status-line {
+	padding: 0.5rem 0.75rem;
+	border-radius: var(--radius-sm);
+	background: var(--color-base-200);
+	font-size: 0.875rem;
+}
+
+.status-line:empty {
+	display: none;
+}
+
+.status-line.ok {
+	background: color-mix(in oklab, var(--color-success) 12%, transparent);
+}
+
+.status-line.fail {
+	background: color-mix(in oklab, var(--color-error) 12%, transparent);
+}
+
+/* ---------- Text helpers ---------- */
+
+.pre-wrap {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.clamp-2 {
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+}
+
+pre.code {
+	max-height: 22rem;
+	overflow: auto;
+	padding: 0.625rem 0.75rem;
+	border-radius: var(--radius-sm);
+	background: var(--color-base-200);
+	font-size: 0.8125rem;
+}
+
+/* ---------- Two columns: list + detail ---------- */
+
+.split {
+	display: grid;
+	gap: 1.5rem;
+	align-items: start;
+}
+
+@media (min-width: 56rem) {
+	.split {
+		grid-template-columns: minmax(16rem, 1fr) minmax(0, 2fr);
+	}
+}
+
+.pick-list {
+	display: grid;
+	gap: 0.25rem;
+	max-height: 32rem;
+	overflow-y: auto;
+	padding: 0;
+	list-style: none;
+}
+
+.pick-list button {
+	display: grid;
+	gap: 0.15rem;
+	width: 100%;
+	padding: 0.6rem 0.75rem;
+	border: 1px solid transparent;
+	border-radius: var(--radius-sm);
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.pick-list button:hover {
+	background: var(--color-base-200);
+}
+
+.pick-list button.htmx-request,
+.pick-list button:focus-visible {
+	border-color: color-mix(in oklab, var(--color-primary) 50%, transparent);
+}
+
+.btn-group > .btn[aria-current='page'] {
+	background: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100));
+	border-color: color-mix(in oklab, var(--color-primary) 45%, transparent);
+	color: var(--color-primary);
+}
+
+/* ---------- MCP server form ---------- */
+
+.example-list {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 0.5rem;
+	margin-top: 1rem;
+	padding: 0;
+	list-style: none;
+}
+
+.example-list li {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.5rem 0.75rem;
+	border-radius: var(--radius-sm);
+	background: var(--color-base-200);
+}
+
+.example-name {
+	width: 7rem;
+	font-weight: 600;
+	font-size: 0.875rem;
+}
+
+.import-box,
+.container-box {
+	padding: 1rem;
+	border: 1px dashed var(--border);
+	border-radius: var(--radius);
+	margin-bottom: 1rem;
+}
+
+.container-box {
+	border-style: solid;
+	margin-bottom: 0;
+}
+
+.checkbox-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.6rem;
+	font-size: 0.875rem;
+	cursor: pointer;
+}
+
+.checkbox-row input,
+.choices input {
+	margin-top: 0.2rem;
+	accent-color: var(--color-primary);
+}
+
+/* Show only the fields that apply, without JavaScript */
+.server-form:has(#s-type option[value='http']:checked) .stdio-only,
+.server-form:not(:has(#s-type option[value='http']:checked)) .http-only,
+.server-form:not(:has(#s-container:checked)) .container-only,
+.server-form:not(:has(#s-preset option[value='custom']:checked)) .custom-image-only {
+	display: none;
+}
+
+.choices {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.choices ul {
+	display: grid;
+	gap: 0.5rem;
+	max-height: 18rem;
+	overflow-y: auto;
+	margin-top: 0.5rem;
+	padding: 0;
+	list-style: none;
+}
+
+.choices li {
+	display: flex;
+	gap: 0.6rem;
+	align-items: flex-start;
+}
+
+/* ---------- Tool results and the LLM timeline ---------- */
+
+.tool-result {
+	display: grid;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	border: 1px solid color-mix(in oklab, var(--color-success) 40%, transparent);
+	border-radius: var(--radius-sm);
+	background: color-mix(in oklab, var(--color-success) 8%, var(--color-base-100));
+	font-size: 0.875rem;
+}
+
+.tool-result.failed {
+	border-color: color-mix(in oklab, var(--color-error) 40%, transparent);
+	background: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100));
+}
+
+.tool-result img {
+	max-width: 100%;
+	border-radius: var(--radius-sm);
+}
+
+.timeline {
+	display: grid;
+	gap: 0.3rem;
+	max-width: 48rem;
+	padding: 0;
+	list-style: none;
+}
+
+.step {
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--color-base-200);
+}
+
+.step.tool {
+	background: var(--color-base-100);
+}
+
+.step.failed {
+	border-color: color-mix(in oklab, var(--color-error) 40%, transparent);
+	background: color-mix(in oklab, var(--color-error) 6%, var(--color-base-100));
+}
+
+.step > summary {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.45rem 0.75rem;
+	font-size: 0.8125rem;
+	cursor: pointer;
+	list-style: none;
+}
+
+.step > summary::-webkit-details-marker {
+	display: none;
+}
+
+.step > summary::after {
+	content: '';
+	width: 0.4rem;
+	height: 0.4rem;
+	border-right: 1.5px solid currentColor;
+	border-bottom: 1.5px solid currentColor;
+	rotate: -45deg;
+	opacity: 0.6;
+	flex: none;
+}
+
+.step[open] > summary::after {
+	rotate: 45deg;
+}
+
+.step-kind {
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.step-summary {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--muted);
+}
+
+.step-meta {
+	color: var(--faint);
+	font-size: 0.75rem;
+	white-space: nowrap;
+}
+
+.step-body {
+	display: grid;
+	gap: 0.4rem;
+	padding: 0.5rem 0.75rem 0.75rem;
+	border-top: 1px solid var(--border);
+}
+
+.step-text {
+	margin: 0.25rem 0 0.25rem 0.75rem;
+	padding-left: 0.75rem;
+	border-left: 2px solid color-mix(in oklab, var(--color-primary) 45%, transparent);
+	font-size: 0.875rem;
+	color: var(--muted);
+}
+
+/* ---------- Chat ---------- */
+
+.chat-layout {
+	display: grid;
+	gap: 1rem;
+	height: calc(100dvh - 3.75rem - 4rem);
+	min-height: 28rem;
+}
+
+@media (min-width: 52rem) {
+	.chat-layout {
+		grid-template-columns: 16rem minmax(0, 1fr);
+	}
+}
+
+.chat-sidebar {
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr);
+	gap: 0.75rem;
+	padding: 0.75rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+	min-height: 0;
+}
+
+@media (max-width: 51.99rem) {
+	.chat-sidebar {
+		max-height: 12rem;
+	}
+}
+
+.conv-list {
+	display: grid;
+	gap: 0.15rem;
+	overflow-y: auto;
+	padding: 0;
+	list-style: none;
+}
+
+.conv-list a {
+	display: grid;
+	padding: 0.5rem 0.625rem;
+	border-radius: var(--radius-sm);
+	color: inherit;
+	text-decoration: none;
+	font-size: 0.875rem;
+}
+
+.conv-list a:hover {
+	background: var(--color-base-200);
+}
+
+.conv-list a[aria-current='page'] {
+	background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+	color: var(--color-primary);
+}
+
+.chat-main {
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr) auto;
+	min-height: 0;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+}
+
+.chat-main > .empty {
+	grid-row: 1 / -1;
+	border: 0;
+}
+
+.chat-header {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid var(--border);
+}
+
+.chat-header h1 {
+	flex: 1;
+	font-size: 1.0625rem;
+}
+
+.chat-scroll {
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 1rem;
+}
+
+.chat-empty {
+	text-align: center;
+	padding-top: 3rem;
+}
+
+.messages {
+	display: grid;
+	gap: 1rem;
+	padding: 0;
+	list-style: none;
+}
+
+.msg {
+	display: grid;
+	gap: 0.4rem;
+	max-width: min(46rem, 100%);
+}
+
+.msg-user {
+	justify-self: end;
+}
+
+.msg-assistant {
+	justify-self: start;
+	width: min(46rem, 100%);
+}
+
+.bubble {
+	padding: 0.625rem 0.875rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-200);
+	overflow-wrap: anywhere;
+}
+
+.msg-user .bubble {
+	border-color: color-mix(in oklab, var(--color-primary) 30%, transparent);
+	background: color-mix(in oklab, var(--color-primary) 9%, var(--color-base-100));
+}
+
+.bubble time {
+	display: block;
+	text-align: end;
+	margin-top: 0.25rem;
+}
+
+.composer {
+	display: grid;
+	gap: 0.5rem;
+	padding: 0.75rem 1rem;
+	border-top: 1px solid var(--border);
+}
+
+.composer-row {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.5rem;
+}
+
+.composer textarea {
+	field-sizing: content;
+	min-height: 2.5rem;
+	max-height: 12rem;
+	resize: none;
+}
+
+/* Markdown inside answers */
+.markdown > :first-child {
+	margin-top: 0;
+}
+
+.markdown > :last-child {
+	margin-bottom: 0;
+}
+
+.markdown :is(p, ul, ol, pre, table, blockquote) {
+	margin-block: 0.5rem;
+}
+
+.markdown :is(h1, h2, h3, h4) {
+	margin-block: 0.75rem 0.375rem;
+	font-size: 1rem;
+}
+
+.markdown ul,
+.markdown ol {
+	padding-inline-start: 1.5rem;
+}
+
+.markdown code {
+	padding: 0.1rem 0.3rem;
+	border-radius: 0.25rem;
+	background: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+
+.markdown pre {
+	padding: 0.75rem;
+	overflow-x: auto;
+	border-radius: var(--radius-sm);
+	background: var(--color-base-100);
+	border: 1px solid var(--border);
+	white-space: pre;
+}
+
+.markdown pre code {
+	padding: 0;
+	background: none;
+}
+
+.markdown table {
+	border-collapse: collapse;
+	display: block;
+	overflow-x: auto;
+}
+
+.markdown :is(th, td) {
+	padding: 0.3rem 0.6rem;
+	border: 1px solid var(--border);
+}
+
+.markdown blockquote {
+	padding-inline-start: 0.75rem;
+	border-inline-start: 3px solid var(--border);
+	color: var(--muted);
+}
+
+/* ---------- Settings ---------- */
+
+.segmented {
+	display: inline-flex;
+	margin: 0;
+	padding: 0.2rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--color-base-100);
+}
+
+.segmented label {
+	padding: 0.25rem 0.75rem;
+	border-radius: 0.3rem;
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: var(--muted);
+	cursor: pointer;
+}
+
+.segmented input {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.segmented label:has(input:checked) {
+	background: color-mix(in oklab, var(--color-primary) 14%, transparent);
+	color: var(--color-primary);
+}
+
+.segmented label:has(input:focus-visible) {
+	outline: 2px solid var(--color-primary);
+}
+
+.theme-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+	gap: 0.75rem;
+	padding: 0;
+	list-style: none;
+}
+
+.theme-grid li {
+	position: relative;
+}
+
+/* Filter by mode without JavaScript */
+.theme-section:has(input[value='light']:checked) .theme-grid li[data-mode='dark'],
+.theme-section:has(input[value='dark']:checked) .theme-grid li[data-mode='light'] {
+	display: none;
+}
+
+.theme-card {
+	display: grid;
+	gap: 0.5rem;
+	width: 100%;
+	padding: 0.875rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+	color: inherit;
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+}
+
+.theme-card:hover {
+	border-color: color-mix(in oklab, var(--color-primary) 45%, transparent);
+}
+
+.theme-card[aria-current='true'] {
+	border-color: var(--color-primary);
+	box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.swatches {
+	display: flex;
+	gap: 0.3rem;
+}
+
+.swatches span {
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 0.3rem;
+	border: 1px solid rgb(0 0 0 / 0.1);
+}
+
+.theme-delete {
+	position: absolute;
+	right: 0.4rem;
+	bottom: 0.4rem;
+}

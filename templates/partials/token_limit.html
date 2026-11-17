@@ -1,0 +1,8 @@
+{%- if let Some(limit) = p.limit %}
+<span class="nums">{{ limit }}</span> tokens/min
+{%- if let Some(checked) = p.limit_checked %}
+<span class="faint tiny" style="display:block">reported {{ checked }}</span>
+{%- endif %}
+{%- else %}
+<span class="faint">Unknown. Run Test to read it.</span>
+{%- endif %}

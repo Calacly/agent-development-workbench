@@ -1,0 +1,15 @@
+<div id="provider-list">
+{%- if providers.is_empty() %}
+	<section class="empty">
+		<h2>No LLM providers yet</h2>
+		<p>Add an OpenAI-compatible provider (OpenAI, Anthropic, Groq, a company gateway, Ollama, …) to chat and test tools.</p>
+		<button type="button" class="btn btn-primary" data-open-dialog="add-provider" data-reset>Add your first provider</button>
+	</section>
+{%- else %}
+	<ul class="list" aria-label="LLM providers">
+		{%- for p in providers %}
+		{% include "partials/provider_card.html" %}
+		{%- endfor %}
+	</ul>
+{%- endif %}
+</div>

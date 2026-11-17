@@ -1,0 +1,27 @@
+<h2 id="server-form-title">Import MCP servers</h2>
+<p class="muted small" role="status">{{ message }}</p>
+<form class="stack" hx-post="/mcp-servers/import/selected" hx-target="#server-dialog-body" style="margin-top:1rem">
+	<input type="hidden" name="servers_json" value="{{ servers_json }}">
+	<fieldset class="choices">
+		<legend class="label">Servers to import</legend>
+		<ul>
+			{%- for c in choices %}
+			<li>
+				<input type="checkbox" id="pick-{{ c.index }}" name="pick" value="{{ c.index }}"{% if c.checked %} checked{% endif %}>
+				<label for="pick-{{ c.index }}">
+					<strong>{{ c.name }}</strong>
+					{%- if c.exists %} <span class="error-text small">(already added)</span>{% endif %}
+					{%- if c.disabled %} <span class="faint small">(disabled in file)</span>{% endif %}
+					<span class="mono faint tiny" style="display:block;word-break:break-all">{{ c.target }}</span>
+				</label>
+			</li>
+			{%- endfor %}
+		</ul>
+	</fieldset>
+	<p id="server-form-error" class="alert alert-error" role="alert"></p>
+	<p class="help">One selected server opens in the form so you can configure it; several are imported at once and can be edited afterwards.</p>
+	<div class="dialog-actions">
+		<button type="button" class="btn" data-close-dialog>Cancel</button>
+		<button type="submit" class="btn btn-primary">Import selected</button>
+	</div>
+</form>

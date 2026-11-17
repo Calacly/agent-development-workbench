@@ -1,0 +1,27 @@
+{% extends "app.html" %}
+{% block title %}Prompts · {{ server.name }} · MCP Client{% endblock %}
+{% block content %}
+{% let page_title = "Prompts" %}
+{% include "partials/server_subnav.html" %}
+{%- if let Some(error) = error %}<p class="alert alert-error" role="alert">{{ error }}</p>{% endif %}
+<div class="split">
+	<section class="panel" aria-labelledby="prompt-title">
+		<h2 id="prompt-title">Prompts ({{ prompts.len() }})</h2>
+		{%- if prompts.is_empty() %}<p class="muted small" style="margin-top:0.75rem">This server lists no prompts.</p>{% endif %}
+		<ul class="pick-list" style="margin-top:0.75rem">
+			{%- for p in prompts %}
+			<li>
+				<button type="button" hx-get="/mcp-servers/{{ server.id }}/prompts/{{ p.name|urlencode }}" hx-target="#prompt-detail">
+					<span class="mono">{{ p.name }}</span>
+					{%- if !p.description.is_empty() %}<span class="faint tiny clamp-2">{{ p.description }}</span>{% endif %}
+					{%- if !p.args.is_empty() %}<span class="faint tiny">{{ p.args.len() }} argument(s)</span>{% endif %}
+				</button>
+			</li>
+			{%- endfor %}
+		</ul>
+	</section>
+	<section id="prompt-detail" class="panel" aria-live="polite">
+		<p class="muted">Select a prompt to fill in its arguments and get it.</p>
+	</section>
+</div>
+{% endblock %}

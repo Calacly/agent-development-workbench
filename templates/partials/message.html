@@ -1,0 +1,35 @@
+{% import "macros.html" as m %}
+<li class="msg {% if msg.is_user %}msg-user{% else %}msg-assistant{% endif %}" id="msg-{{ msg.id }}">
+	{%- if !msg.steps.is_empty() %}
+	<div class="msg-trace">{% call m::timeline(msg.steps) %}{% endcall %}</div>
+	{%- elif !msg.tools.is_empty() %}
+	<div class="msg-trace">
+		<ol class="timeline" aria-label="Tool calls">
+			{%- for call in msg.tools.iter() %}
+			<li>
+				<details class="step tool">
+					<summary>
+						<span class="step-kind">Tool</span>
+						<span class="step-summary mono">{{ call.name }}</span>
+						{%- if call.done %}<span class="pill pill-success">done</span>{% endif %}
+					</summary>
+					<div class="step-body">
+						<p class="faint tiny">Arguments</p>
+						<pre class="code">{{ call.args_json }}</pre>
+						{%- if call.done %}<p class="faint tiny">Result</p>{% call m::tool_result(call.result) %}{% endcall %}{% endif %}
+					</div>
+				</details>
+			</li>
+			{%- endfor %}
+		</ol>
+	</div>
+	{%- endif %}
+	<div class="bubble">
+		{%- if msg.is_user %}
+		<p class="pre-wrap">{{ msg.text }}</p>
+		{%- else %}
+		<div class="markdown">{{ msg.html|safe }}</div>
+		{%- endif %}
+		<time class="faint tiny" datetime="{{ msg.iso }}" data-local-time>{{ msg.time }}</time>
+	</div>
+</li>

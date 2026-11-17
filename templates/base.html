@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{% block title %}MCP Client{% endblock %}</title>
+	<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+	<link rel="stylesheet" href="/static/app.css">
+	{%- if !layout.theme_css.is_empty() %}
+	<style>{{ layout.theme_css|safe }}</style>
+	{%- endif %}
+	<script src="/static/vendor/htmx-2.0.11.min.js" defer></script>
+	<script src="/static/app.js" defer></script>
+</head>
+<body>
+{% block body %}{% endblock %}
+</body>
+</html>

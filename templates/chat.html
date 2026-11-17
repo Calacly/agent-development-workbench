@@ -1,0 +1,86 @@
+{% extends "app.html" %}
+{% block title %}{% if let Some(c) = current %}{{ c.title }} · {% endif %}Chat · MCP Client{% endblock %}
+{% block content %}
+<div class="chat-layout">
+	<aside class="chat-sidebar" aria-label="Conversations">
+		<button type="button" class="btn btn-primary" data-open-dialog="new-chat" data-reset>
+			<svg class="icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1Z"/></svg>
+			New chat
+		</button>
+		<nav>
+			<ul class="conv-list">
+				{%- for c in conversations %}
+				<li>
+					<a href="/chat/{{ c.id }}"{% if c.active %} aria-current="page"{% endif %}>
+						<span class="truncate">{{ c.title }}</span>
+						<span class="faint tiny">{{ c.date }}</span>
+					</a>
+				</li>
+				{%- endfor %}
+			</ul>
+		</nav>
+	</aside>
+
+	<section class="chat-main">
+	{%- if let Some(c) = current %}
+		<header class="chat-header">
+			<h1 class="truncate">{{ c.title }}</h1>
+			<button type="button" class="btn btn-sm btn-ghost btn-icon btn-danger" title="Delete" aria-label="Delete this conversation"
+				hx-delete="/chat/{{ c.id }}/delete" hx-confirm="Delete “{{ c.title }}” and its messages?">
+				<svg class="icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clip-rule="evenodd"/></svg>
+			</button>
+		</header>
+		<div class="chat-scroll" data-chat data-conversation-id="{{ c.id }}">
+			<ol class="messages" id="messages" aria-live="polite">
+				{%- for msg in messages %}
+				{% include "partials/message.html" %}
+				{%- endfor %}
+			</ol>
+			{%- if messages.is_empty() %}<p class="chat-empty faint">No messages yet. Ask something below.</p>{% endif %}
+			<p id="chat-error" class="alert alert-error" role="alert"></p>
+		</div>
+		<form id="chat-form" class="composer">
+			{%- if providers.is_empty() %}
+			<p class="alert alert-error">No LLM provider configured. <a href="/llm-providers">Add one</a> to start chatting.</p>
+			{%- endif %}
+			<div class="composer-row">
+				<label class="sr-only" for="chat-input">Message</label>
+				<textarea id="chat-input" class="textarea" rows="1" placeholder="Message…" required{% if providers.is_empty() %} disabled{% endif %}></textarea>
+				<button type="submit" class="btn btn-primary" id="chat-send"{% if providers.is_empty() %} disabled{% endif %}>Send</button>
+			</div>
+			<div class="row small">
+				<label class="faint" for="chat-provider">Model</label>
+				<select id="chat-provider" class="select input-sm" style="width:auto;max-width:24rem">
+					{%- for p in providers %}
+					<option value="{{ p.id }}"{% if p.selected %} selected{% endif %}>{{ p.label }}</option>
+					{%- endfor %}
+				</select>
+				<span class="spacer"></span>
+				<span id="chat-status" class="faint tiny" role="status"></span>
+			</div>
+		</form>
+	{%- else %}
+		<div class="empty" style="margin:auto;max-width:28rem">
+			<h2>Start a conversation</h2>
+			<p>Chat with your LLM providers. Tools of your connected MCP servers are available to the model.</p>
+			<button type="button" class="btn btn-primary" data-open-dialog="new-chat" data-reset>New chat</button>
+		</div>
+	{%- endif %}
+	</section>
+</div>
+
+<dialog id="new-chat" class="modal" aria-labelledby="new-chat-title" closedby="any">
+	<h2 id="new-chat-title">New chat</h2>
+	<form class="stack" method="post" action="/chat" hx-post="/chat">
+		<div class="field">
+			<label for="chat-title">Title</label>
+			<input class="input" id="chat-title" name="title" placeholder="e.g. Project discussion" autofocus>
+		</div>
+		<div class="dialog-actions">
+			<button type="button" class="btn" data-close-dialog>Cancel</button>
+			<button type="submit" class="btn btn-primary">Create</button>
+		</div>
+	</form>
+</dialog>
+<script src="/static/chat.js" defer></script>
+{% endblock %}

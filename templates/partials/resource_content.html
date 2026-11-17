@@ -1,0 +1,16 @@
+{%- if let Some(error) = error %}
+<p class="alert alert-error">{{ error }}</p>
+{%- endif %}
+{%- for c in contents %}
+<article class="stack" style="--gap:0.5rem;margin-bottom:1rem">
+	<header class="row">
+		<span class="mono small truncate spacer">{{ c.uri }}</span>
+		{%- if !c.mime.is_empty() %}<span class="pill">{{ c.mime }}</span>{% endif %}
+	</header>
+	{%- if let Some(text) = c.text %}
+	<pre class="code">{{ text }}</pre>
+	{%- elif let Some(size) = c.blob_size %}
+	<p class="muted small">Binary content, about {{ size }} bytes.</p>
+	{%- endif %}
+</article>
+{%- endfor %}

@@ -1,0 +1,17 @@
+<p id="{{ target_id }}" class="status-line {% if success %}ok{% else %}fail{% endif %}{% if card_wide %} card-wide{% endif %}" role="status">
+{%- if success %}
+	<strong>OK</strong> · {{ model }} · {{ latency_ms }} ms
+	{%- if let Some(limit) = limit %} · limit {{ limit }} tokens/min{% if let Some(left) = remaining %}, {{ left }} left{% endif %}{% endif %}
+	<br><span class="muted">“{{ reply }}”</span>
+{%- else %}
+	<strong>Failed:</strong> {{ message }}
+{%- endif %}
+</p>
+{%- if let Some(p) = card %}
+<dd id="limit-{{ p.id }}" hx-swap-oob="true">{% include "partials/token_limit.html" %}</dd>
+{%- endif %}
+{%- if let Some(p) = card %}
+{%- if p.cap_error.is_none() %}
+<p id="cap-help-{{ p.id }}" class="help" hx-swap-oob="true">{{ p.cap_help }}</p>
+{%- endif %}
+{%- endif %}

@@ -1,0 +1,14 @@
+<div class="page-header">
+	<div>
+		<p class="small"><a href="/mcp-servers">MCP Servers</a> <span aria-hidden="true">/</span> {{ server.name }}</p>
+		<h1>{{ page_title }}</h1>
+	</div>
+	<nav class="btn-group" aria-label="{{ server.name }}">
+		<a class="btn btn-sm" href="/mcp-servers/{{ server.id }}/tools"{% if page_title == "Tools" %} aria-current="page"{% endif %}>Tools</a>
+		<a class="btn btn-sm" href="/mcp-servers/{{ server.id }}/resources"{% if page_title == "Resources" %} aria-current="page"{% endif %}>Resources</a>
+		<a class="btn btn-sm" href="/mcp-servers/{{ server.id }}/prompts"{% if page_title == "Prompts" %} aria-current="page"{% endif %}>Prompts</a>
+	</nav>
+</div>
+{%- if !server.running %}
+<p class="alert alert-error" role="alert">This server is not connected. <a href="/mcp-servers">Connect it</a> to use its {{ page_title|lower }}.</p>
+{%- endif %}

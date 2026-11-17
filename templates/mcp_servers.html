@@ -1,0 +1,36 @@
+{% extends "app.html" %}
+{% block title %}MCP Servers · MCP Client{% endblock %}
+{% block content %}
+<div class="page-header">
+	<div>
+		<h1>MCP Servers</h1>
+		<p>Manage your Model Context Protocol server connections</p>
+	</div>
+	<button type="button" class="btn btn-primary" hx-get="/mcp-servers/new" hx-target="#server-dialog-body" hx-on::after-request="document.getElementById('server-dialog').showModal()">
+		<svg class="icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1Z"/></svg>
+		Add Server
+	</button>
+</div>
+
+{% include "partials/server_list.html" %}
+
+<section class="panel" style="margin-top:1.5rem" aria-labelledby="examples-title">
+	<h2 id="examples-title">Example servers</h2>
+	<p class="muted small" style="margin-top:0.25rem">Start from one of these, or import an mcp.json in the Add Server dialog.</p>
+	<ul class="example-list">
+		{%- for ex in examples %}
+		<li>
+			<span class="example-name">{{ ex.name }}</span>
+			<code class="truncate spacer">{{ ex.command }} {{ ex.args }}</code>
+			<button type="button" class="btn btn-sm btn-ghost" aria-label="Use the {{ ex.name }} example"
+				hx-get="/mcp-servers/new?example={{ ex.key }}" hx-target="#server-dialog-body"
+				hx-on::after-request="document.getElementById('server-dialog').showModal()">Use</button>
+		</li>
+		{%- endfor %}
+	</ul>
+</section>
+
+<dialog id="server-dialog" class="modal modal-lg" aria-labelledby="server-form-title">
+	<div id="server-dialog-body"></div>
+</dialog>
+{% endblock %}

@@ -1,0 +1,13 @@
+{%- if let Some(error) = error %}
+<p class="alert alert-error">{{ error }}</p>
+{%- else %}
+{%- if !description.is_empty() %}<p class="muted small">{{ description }}</p>{% endif %}
+<ol class="stack" style="--gap:0.5rem;padding:0;list-style:none;margin-top:0.5rem">
+	{%- for msg in messages %}
+	<li class="tool-result">
+		<p class="label">{{ msg.role }}</p>
+		<p class="pre-wrap">{{ msg.text }}</p>
+	</li>
+	{%- endfor %}
+</ol>
+{%- endif %}

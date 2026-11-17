@@ -1,0 +1,19 @@
+{% import "macros.html" as m %}
+<div class="stack">
+	{%- if !steps.is_empty() %}
+	<div>
+		<p class="label" style="margin-bottom:0.5rem">LLM rounds and tool calls</p>
+		{% call m::timeline(steps) %}{% endcall %}
+	</div>
+	{%- endif %}
+	<div>
+		<p class="label" style="margin-bottom:0.5rem">Response</p>
+		{%- if let Some(error) = error %}
+		<p class="alert alert-error pre-wrap"><strong>The LLM request failed{% if had_tool_calls %} after the tool calls{% endif %}:</strong> {{ error }}</p>
+		{%- elif !response.is_empty() %}
+		<p class="alert alert-success pre-wrap">{{ response }}</p>
+		{%- else %}
+		<p class="alert faint">The LLM returned no text.</p>
+		{%- endif %}
+	</div>
+</div>

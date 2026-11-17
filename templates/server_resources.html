@@ -1,0 +1,31 @@
+{% extends "app.html" %}
+{% block title %}Resources · {{ server.name }} · MCP Client{% endblock %}
+{% block content %}
+{% let page_title = "Resources" %}
+{% include "partials/server_subnav.html" %}
+{%- if let Some(error) = error %}<p class="alert alert-error" role="alert">{{ error }}</p>{% endif %}
+<div class="split">
+	<section class="panel" aria-labelledby="res-title">
+		<h2 id="res-title">Resources ({{ resources.len() }})</h2>
+		{%- if resources.is_empty() %}<p class="muted small" style="margin-top:0.75rem">This server lists no resources.</p>{% endif %}
+		<ul class="pick-list" style="margin-top:0.75rem">
+			{%- for r in resources %}
+			<li>
+				<form hx-post="/mcp-servers/{{ server.id }}/resources" hx-target="#resource-content">
+				<input type="hidden" name="uri" value="{{ r.uri }}">
+				<button type="submit">
+					<span>{% if r.name.is_empty() %}{{ r.uri }}{% else %}{{ r.name }}{% endif %}</span>
+					<span class="mono faint tiny truncate">{{ r.uri }}</span>
+					{%- if !r.description.is_empty() %}<span class="faint tiny clamp-2">{{ r.description }}</span>{% endif %}
+					{%- if !r.mime.is_empty() %}<span class="pill" style="justify-self:start">{{ r.mime }}</span>{% endif %}
+				</button>
+				</form>
+			</li>
+			{%- endfor %}
+		</ul>
+	</section>
+	<section id="resource-content" class="panel" aria-live="polite">
+		<p class="muted">Select a resource to read it.</p>
+	</section>
+</div>
+{% endblock %}

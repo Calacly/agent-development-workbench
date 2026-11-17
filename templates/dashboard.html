@@ -1,0 +1,55 @@
+{% extends "app.html" %}
+{% block title %}Dashboard · MCP Client{% endblock %}
+{% block content %}
+<div class="page-header">
+	<div>
+		<h1>Dashboard</h1>
+		<p>Welcome back, {{ layout.username }}!</p>
+	</div>
+</div>
+
+<div class="stack" style="--gap: 2rem">
+	<section class="dash-grid" aria-label="Overview">
+		{%- for card in cards %}
+		<a class="dash-card" href="{{ card.href }}">
+			<article class="stack" style="--gap: 0.75rem">
+				<header class="row">
+					<h2 class="spacer">{{ card.title }}</h2>
+					<svg class="icon" style="width:1.5rem;height:1.5rem;color:var(--color-primary)" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">{{ card.icon|safe }}</svg>
+				</header>
+				<p class="muted small">{{ card.text }}</p>
+				<footer class="row" style="align-items:flex-end">
+					<p class="spacer">
+						<span class="count nums" style="display:block">{{ card.count }}</span>
+						<span class="faint tiny">{{ card.unit }}</span>
+					</p>
+					<span class="go">{{ card.action }} <span aria-hidden="true">→</span></span>
+				</footer>
+			</article>
+		</a>
+		{%- endfor %}
+	</section>
+
+	<section class="panel" aria-labelledby="getting-started">
+		<div class="row" style="justify-content:space-between;margin-bottom:0.75rem">
+			<h2 id="getting-started">Getting started</h2>
+			<p class="muted small">{{ steps_done }} of {{ steps.len() }} done</p>
+		</div>
+		<ol class="checklist">
+			{%- for step in steps %}
+			<li>
+				<a href="{{ step.href }}">
+					{%- if step.done %}
+					<span class="check done" aria-hidden="true"><svg class="icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clip-rule="evenodd"/></svg></span>
+					<span class="done-text">{{ step.text }}</span><span class="sr-only">(done)</span>
+					{%- else %}
+					<span class="check" aria-hidden="true">{{ loop.index }}</span>
+					<span>{{ step.text }}</span>
+					{%- endif %}
+				</a>
+			</li>
+			{%- endfor %}
+		</ol>
+	</section>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{%- if f.edit_id.is_none() %}
+<h2 id="server-form-title">Add MCP Server</h2>
+<div class="import-box">
+	<label class="label" for="import-file">Import from config file</label>
+	<input id="import-file" class="input" type="file" name="file" accept=".json,application/json"
+		hx-post="/mcp-servers/import" hx-encoding="multipart/form-data" hx-trigger="change" hx-target="#server-dialog-body"
+		aria-describedby="import-help">
+	<p id="import-help" class="help">An mcp.json with an "mcpServers" object, e.g. the download from try-mcp.dev</p>
+</div>
+{%- else %}
+<h2 id="server-form-title">Edit MCP Server</h2>
+{%- endif %}
+{%- if !f.notice.is_empty() %}<p class="alert alert-success" role="status">{{ f.notice }}</p>{% endif %}
+{%- if !f.error.is_empty() %}<p class="alert alert-error" role="alert">{{ f.error }}</p>{% endif %}
+
+<form class="stack server-form"
+	{%- if let Some(id) = f.edit_id %} hx-put="/mcp-servers/{{ id }}"{% else %} hx-post="/mcp-servers"{% endif %}
+	hx-target="#server-list" hx-swap="outerHTML" data-close-on-success>
+	<div class="field">
+		<label for="s-name">Server name</label>
+		<input class="input" id="s-name" name="name" value="{{ f.name }}" placeholder="e.g. Git server" required>
+	</div>
+	<div class="field">
+		<label for="s-type">Server type</label>
+		{%- if f.edit_id.is_some() %}
+		<select class="select" id="s-type" disabled aria-describedby="s-type-help">
+			<option value="stdio"{% if f.server_type == "stdio" %} selected{% endif %}>Local (stdio)</option>
+			<option value="http"{% if f.server_type == "http" %} selected{% endif %}>Remote (HTTP)</option>
+		</select>
+		<input type="hidden" name="server_type" value="{{ f.server_type }}">
+		<p id="s-type-help" class="help">The type can't be changed after adding.</p>
+		{%- else %}
+		<select class="select" id="s-type" name="server_type">
+			<option value="stdio"{% if f.server_type == "stdio" %} selected{% endif %}>Local (stdio)</option>
+			<option value="http"{% if f.server_type == "http" %} selected{% endif %}>Remote (HTTP)</option>
+		</select>
+		{%- endif %}
+	</div>
+
+	<div class="field stdio-only">
+		<label for="s-command">Command</label>
+		<input class="input" id="s-command" name="command" value="{{ f.command }}" placeholder="uvx, npx, python, …">
+	</div>
+	<div class="field stdio-only">
+		<label for="s-args">Arguments</label>
+		<input class="input mono" id="s-args" name="args" value="{{ f.args }}" placeholder="mcp-server-git --repository /path" aria-describedby="s-args-help">
+		<input type="hidden" name="original_args" value="{{ f.original_args }}">
+		<p id="s-args-help" class="help">Separated by spaces</p>
+	</div>
+	<div class="field stdio-only">
+		<label for="s-env">Environment variables (optional)</label>
+		<textarea class="textarea mono" id="s-env" name="env" rows="3" placeholder='{"KEY": "value"}' aria-describedby="s-env-help">{{ f.env }}</textarea>
+		<p id="s-env-help" class="help">A JSON object</p>
+	</div>
+	<div class="field http-only">
+		<label for="s-url">Server URL</label>
+		<input class="input" id="s-url" name="url" type="url" value="{{ f.url }}" placeholder="https://mcp.example.com/mcp">
+	</div>
+
+	<div class="stdio-only container-box">
+		<label class="checkbox-row" for="s-container">
+			<input type="checkbox" id="s-container" name="use_container"{% if f.use_container %} checked{% endif %}>
+			<span><strong>Run in a container</strong> (Podman/Docker)
+				<span class="help" style="display:block">Isolates the server from your machine. Needs Podman or Docker.</span></span>
+		</label>
+		<div class="stack container-only" style="--gap:0.75rem;margin-top:0.75rem">
+			<div class="field">
+				<label for="s-preset">Container image</label>
+				<select class="select" id="s-preset" name="image_preset">
+					{%- for p in presets %}
+					<option value="{{ p.key }}"{% if f.image_preset.as_str() == p.key %} selected{% endif %}>{{ p.label }}</option>
+					{%- endfor %}
+					<option value="custom"{% if f.image_preset == "custom" %} selected{% endif %}>Custom image</option>
+				</select>
+			</div>
+			<div class="field custom-image-only">
+				<label for="s-image">Custom image</label>
+				<input class="input mono" id="s-image" name="image" value="{{ f.image }}" placeholder="registry.example.com/image:tag">
+			</div>
+			<div class="field">
+				<label for="s-params">Container parameters (optional)</label>
+				<input class="input mono" id="s-params" name="container_params" value="{{ f.container_params }}" placeholder="-v /my/data:/data" aria-describedby="s-params-help">
+				<p id="s-params-help" class="help">Extra arguments such as volume mounts. Some (e.g. --network=host) weaken the isolation.</p>
+			</div>
+		</div>
+	</div>
+
+	<p id="server-form-error" class="alert alert-error" role="alert"></p>
+	<div class="dialog-actions">
+		<button type="button" class="btn" data-close-dialog>Cancel</button>
+		<button type="submit" class="btn btn-primary">{% if f.edit_id.is_some() %}Save changes{% else %}Add Server{% endif %}</button>
+	</div>
+</form>

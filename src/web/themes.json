@@ -1,0 +1,682 @@
+[
+ {
+  "name": "Light",
+  "mode": "light",
+  "colors": {
+   "primary": "#570df8",
+   "secondary": "#f000b8",
+   "accent": "#37cdbe",
+   "neutral": "#3d4451",
+   "base-100": "#ffffff",
+   "base-200": "#f9fafb",
+   "base-300": "#d1d5db",
+   "info": "#3abff8",
+   "success": "#36d399",
+   "warning": "#fbbd23",
+   "error": "#f87272"
+  }
+ },
+ {
+  "name": "Cupcake",
+  "mode": "light",
+  "colors": {
+   "primary": "#65c3c8",
+   "secondary": "#ef9fbc",
+   "accent": "#eeaf3a",
+   "neutral": "#291334",
+   "base-100": "#faf7f5",
+   "base-200": "#efeae6",
+   "base-300": "#e7e2df",
+   "info": "#42adbb",
+   "success": "#499380",
+   "warning": "#e8992e",
+   "error": "#df4049"
+  }
+ },
+ {
+  "name": "Bumblebee",
+  "mode": "light",
+  "colors": {
+   "primary": "#e0a82e",
+   "secondary": "#f9d72f",
+   "accent": "#181830",
+   "neutral": "#181830",
+   "base-100": "#ffffff",
+   "base-200": "#f9fafb",
+   "base-300": "#d1d5db",
+   "info": "#3abff8",
+   "success": "#36d399",
+   "warning": "#fbbd23",
+   "error": "#f87272"
+  }
+ },
+ {
+  "name": "Emerald",
+  "mode": "light",
+  "colors": {
+   "primary": "#66cc8a",
+   "secondary": "#377cfb",
+   "accent": "#ea5234",
+   "neutral": "#333c4d",
+   "base-100": "#ffffff",
+   "base-200": "#f9fafb",
+   "base-300": "#d1d5db",
+   "info": "#3abff8",
+   "success": "#36d399",
+   "warning": "#fbbd23",
+   "error": "#f87272"
+  }
+ },
+ {
+  "name": "Corporate",
+  "mode": "light",
+  "colors": {
+   "primary": "#4b6bfb",
+   "secondary": "#7b92b2",
+   "accent": "#67cba0",
+   "neutral": "#181a2a",
+   "base-100": "#ffffff",
+   "base-200": "#f9fafb",
+   "base-300": "#d1d5db",
+   "info": "#3abff8",
+   "success": "#36d399",
+   "warning": "#fbbd23",
+   "error": "#f87272"
+  }
+ },
+ {
+  "name": "Retro",
+  "mode": "light",
+  "colors": {
+   "primary": "#ef9995",
+   "secondary": "#a4cbb4",
+   "accent": "#ebdc99",
+   "neutral": "#2e282a",
+   "base-100": "#e4d8b4",
+   "base-200": "#d2c59d",
+   "base-300": "#c6b386",
+   "info": "#2563eb",
+   "success": "#16a34a",
+   "warning": "#d97706",
+   "error": "#dc2626"
+  }
+ },
+ {
+  "name": "Garden",
+  "mode": "light",
+  "colors": {
+   "primary": "#5c7f67",
+   "secondary": "#ecf4e7",
+   "accent": "#5c7f67",
+   "neutral": "#5d5c61",
+   "base-100": "#e8f5e8",
+   "base-200": "#dfe8dc",
+   "base-300": "#c5d5c2",
+   "info": "#2563eb",
+   "success": "#16a34a",
+   "warning": "#d97706",
+   "error": "#dc2626"
+  }
+ },
+ {
+  "name": "Pastel",
+  "mode": "light",
+  "colors": {
+   "primary": "#d1c1d7",
+   "secondary": "#f6cbd1",
+   "accent": "#b4e9d6",
+   "neutral": "#70acc7",
+   "base-100": "#ffffff",
+   "base-200": "#f9fafb",
+   "base-300": "#d1d5db",
+   "info": "#2563eb",
+   "success": "#16a34a",
+   "warning": "#d97706",
+   "error": "#dc2626"
+  }
+ },
+ {
+  "name": "Wireframe",
+  "mode": "light",
+  "colors": {
+   "primary": "#b8b8b8",
+   "secondary": "#b8b8b8",
+   "accent": "#b8b8b8",
+   "neutral": "#b8b8b8",
+   "base-100": "#ffffff",
+   "base-200": "#eeeeee",
+   "base-300": "#dddddd",
+   "info": "#0000ff",
+   "success": "#008000",
+   "warning": "#ffff00",
+   "error": "#ff0000"
+  }
+ },
+ {
+  "name": "Cmyk",
+  "mode": "light",
+  "colors": {
+   "primary": "#45aaff",
+   "secondary": "#ff4aa2",
+   "accent": "#fbff00",
+   "neutral": "#1c1917",
+   "base-100": "#ffffff",
+   "base-200": "#f9fafb",
+   "base-300": "#d1d5db",
+   "info": "#0089c4",
+   "success": "#00ca8d",
+   "warning": "#f3c610",
+   "error": "#ff4559"
+  }
+ },
+ {
+  "name": "Autumn",
+  "mode": "light",
+  "colors": {
+   "primary": "#8c0327",
+   "secondary": "#d85251",
+   "accent": "#f3c610",
+   "neutral": "#2b2024",
+   "base-100": "#f1f1f0",
+   "base-200": "#e5e3e1",
+   "base-300": "#d9d6d3",
+   "info": "#1e40af",
+   "success": "#047857",
+   "warning": "#f59e0b",
+   "error": "#dc2626"
+  }
+ },
+ {
+  "name": "Acid",
+  "mode": "light",
+  "colors": {
+   "primary": "#ff00f4",
+   "secondary": "#ffc800",
+   "accent": "#ff0000",
+   "neutral": "#191a3f",
+   "base-100": "#fafafa",
+   "base-200": "#eeeeee",
+   "base-300": "#dddddd",
+   "info": "#0000ff",
+   "success": "#00ff00",
+   "warning": "#ffff00",
+   "error": "#ff0000"
+  }
+ },
+ {
+  "name": "Lemonade",
+  "mode": "light",
+  "colors": {
+   "primary": "#519903",
+   "secondary": "#e9e92e",
+   "accent": "#f9f7af",
+   "neutral": "#191a3f",
+   "base-100": "#ffffff",
+   "base-200": "#f8f9fa",
+   "base-300": "#e9ecef",
+   "info": "#1e40af",
+   "success": "#047857",
+   "warning": "#f59e0b",
+   "error": "#dc2626"
+  }
+ },
+ {
+  "name": "Nord",
+  "mode": "light",
+  "colors": {
+   "primary": "#5e81ac",
+   "secondary": "#81a1c1",
+   "accent": "#88c0d0",
+   "neutral": "#4c566a",
+   "base-100": "#eceff4",
+   "base-200": "#e5e9f0",
+   "base-300": "#d8dee9",
+   "info": "#5e81ac",
+   "success": "#a3be8c",
+   "warning": "#ebcb8b",
+   "error": "#bf616a"
+  }
+ },
+ {
+  "name": "Winter",
+  "mode": "light",
+  "colors": {
+   "primary": "#047aed",
+   "secondary": "#463aa2",
+   "accent": "#c148ac",
+   "neutral": "#021431",
+   "base-100": "#ffffff",
+   "base-200": "#f0f7ff",
+   "base-300": "#d1e3ff",
+   "info": "#1e40af",
+   "success": "#047857",
+   "warning": "#f59e0b",
+   "error": "#dc2626"
+  }
+ },
+ {
+  "name": "Valentine",
+  "mode": "light",
+  "colors": {
+   "primary": "#e96d7b",
+   "secondary": "#a991f7",
+   "accent": "#88dbdd",
+   "neutral": "#af4670",
+   "base-100": "#f2e8e5",
+   "base-200": "#ead7d3",
+   "base-300": "#e3c6c2",
+   "info": "#3b82f6",
+   "success": "#10b981",
+   "warning": "#f59e0b",
+   "error": "#ef4444"
+  }
+ },
+ {
+  "name": "Lofi",
+  "mode": "light",
+  "colors": {
+   "primary": "#0d0d0d",
+   "secondary": "#1a1a1a",
+   "accent": "#262626",
+   "neutral": "#0d0d0d",
+   "base-100": "#ffffff",
+   "base-200": "#f5f5f5",
+   "base-300": "#e5e5e5",
+   "info": "#60a5fa",
+   "success": "#34d399",
+   "warning": "#fbbf24",
+   "error": "#f87171"
+  }
+ },
+ {
+  "name": "Fantasy",
+  "mode": "light",
+  "colors": {
+   "primary": "#6e0b75",
+   "secondary": "#007ebd",
+   "accent": "#f00060",
+   "neutral": "#1f2937",
+   "base-100": "#ffffff",
+   "base-200": "#f9fafb",
+   "base-300": "#f3f4f6",
+   "info": "#3b82f6",
+   "success": "#10b981",
+   "warning": "#f59e0b",
+   "error": "#ef4444"
+  }
+ },
+ {
+  "name": "Sunrise",
+  "mode": "light",
+  "colors": {
+   "primary": "#ff6b35",
+   "secondary": "#ff9f1c",
+   "accent": "#ffbf69",
+   "neutral": "#3e3c42",
+   "base-100": "#ffffff",
+   "base-200": "#fffbf5",
+   "base-300": "#fff5e6",
+   "info": "#3b82f6",
+   "success": "#10b981",
+   "warning": "#f59e0b",
+   "error": "#ef4444"
+  }
+ },
+ {
+  "name": "Sakura",
+  "mode": "light",
+  "colors": {
+   "primary": "#e89bb6",
+   "secondary": "#d5a7b7",
+   "accent": "#f4c2c2",
+   "neutral": "#4a4a4a",
+   "base-100": "#fff8f8",
+   "base-200": "#ffe8e8",
+   "base-300": "#ffd8d8",
+   "info": "#93c5fd",
+   "success": "#86efac",
+   "warning": "#fde047",
+   "error": "#fca5a5"
+  }
+ },
+ {
+  "name": "Dark",
+  "mode": "dark",
+  "colors": {
+   "primary": "#661ae6",
+   "secondary": "#d926aa",
+   "accent": "#1fb2a6",
+   "neutral": "#2a323c",
+   "base-100": "#1d232a",
+   "base-200": "#191e24",
+   "base-300": "#15191e",
+   "info": "#3abff8",
+   "success": "#36d399",
+   "warning": "#fbbd23",
+   "error": "#f87272"
+  }
+ },
+ {
+  "name": "Synthwave",
+  "mode": "dark",
+  "colors": {
+   "primary": "#e779c1",
+   "secondary": "#58c7f3",
+   "accent": "#f3cc30",
+   "neutral": "#20134e",
+   "base-100": "#1d1731",
+   "base-200": "#1a1329",
+   "base-300": "#160e20",
+   "info": "#8ce1ff",
+   "success": "#00ff9f",
+   "warning": "#ffb86b",
+   "error": "#ff6d7a"
+  }
+ },
+ {
+  "name": "Halloween",
+  "mode": "dark",
+  "colors": {
+   "primary": "#f28c18",
+   "secondary": "#6d3a9c",
+   "accent": "#51a800",
+   "neutral": "#212121",
+   "base-100": "#1b1b1d",
+   "base-200": "#18181a",
+   "base-300": "#141416",
+   "info": "#60a5fa",
+   "success": "#34d399",
+   "warning": "#fbbf24",
+   "error": "#f87171"
+  }
+ },
+ {
+  "name": "Forest",
+  "mode": "dark",
+  "colors": {
+   "primary": "#1eb854",
+   "secondary": "#1db88e",
+   "accent": "#1db8ab",
+   "neutral": "#19362d",
+   "base-100": "#171212",
+   "base-200": "#140f0f",
+   "base-300": "#110c0c",
+   "info": "#3abff8",
+   "success": "#36d399",
+   "warning": "#fbbd23",
+   "error": "#f87272"
+  }
+ },
+ {
+  "name": "Aqua",
+  "mode": "dark",
+  "colors": {
+   "primary": "#09ecf3",
+   "secondary": "#966fb3",
+   "accent": "#ffe999",
+   "neutral": "#3b8ac4",
+   "base-100": "#345da7",
+   "base-200": "#2f5397",
+   "base-300": "#2a4987",
+   "info": "#60a5fa",
+   "success": "#34d399",
+   "warning": "#fbbf24",
+   "error": "#f87171"
+  }
+ },
+ {
+  "name": "Black",
+  "mode": "dark",
+  "colors": {
+   "primary": "#343232",
+   "secondary": "#343232",
+   "accent": "#343232",
+   "neutral": "#2a2e37",
+   "base-100": "#000000",
+   "base-200": "#0d0d0d",
+   "base-300": "#1a1a1a",
+   "info": "#60a5fa",
+   "success": "#34d399",
+   "warning": "#fbbf24",
+   "error": "#f87171"
+  }
+ },
+ {
+  "name": "Luxury",
+  "mode": "dark",
+  "colors": {
+   "primary": "#ffffff",
+   "secondary": "#152747",
+   "accent": "#513448",
+   "neutral": "#331800",
+   "base-100": "#09090b",
+   "base-200": "#050506",
+   "base-300": "#020203",
+   "info": "#66c7ff",
+   "success": "#87d039",
+   "warning": "#e1d460",
+   "error": "#ff6b9d"
+  }
+ },
+ {
+  "name": "Dracula",
+  "mode": "dark",
+  "colors": {
+   "primary": "#ff79c6",
+   "secondary": "#bd93f9",
+   "accent": "#ffb86c",
+   "neutral": "#414558",
+   "base-100": "#282a36",
+   "base-200": "#21222c",
+   "base-300": "#191a21",
+   "info": "#8be9fd",
+   "success": "#50fa7b",
+   "warning": "#f1fa8c",
+   "error": "#ff5555"
+  }
+ },
+ {
+  "name": "Business",
+  "mode": "dark",
+  "colors": {
+   "primary": "#1c4e80",
+   "secondary": "#7c909a",
+   "accent": "#ea6947",
+   "neutral": "#23282f",
+   "base-100": "#202020",
+   "base-200": "#1a1a1a",
+   "base-300": "#151515",
+   "info": "#0ca6e9",
+   "success": "#2dd4bf",
+   "warning": "#f4c152",
+   "error": "#fb7085"
+  }
+ },
+ {
+  "name": "Night",
+  "mode": "dark",
+  "colors": {
+   "primary": "#38bdf8",
+   "secondary": "#818cf8",
+   "accent": "#f471b5",
+   "neutral": "#1e293b",
+   "base-100": "#0f172a",
+   "base-200": "#0c1222",
+   "base-300": "#090d1a",
+   "info": "#0ca5e9",
+   "success": "#2dd4bf",
+   "warning": "#f4c152",
+   "error": "#fb7085"
+  }
+ },
+ {
+  "name": "Coffee",
+  "mode": "dark",
+  "colors": {
+   "primary": "#db924b",
+   "secondary": "#6f4a3c",
+   "accent": "#503831",
+   "neutral": "#282425",
+   "base-100": "#20161f",
+   "base-200": "#1b1314",
+   "base-300": "#160f0f",
+   "info": "#8dcac1",
+   "success": "#9db787",
+   "warning": "#ffd97d",
+   "error": "#ee8e7a"
+  }
+ },
+ {
+  "name": "Dim",
+  "mode": "dark",
+  "colors": {
+   "primary": "#9fe88d",
+   "secondary": "#ff7eee",
+   "accent": "#ffc66d",
+   "neutral": "#2b3443",
+   "base-100": "#2a303c",
+   "base-200": "#242933",
+   "base-300": "#1e2229",
+   "info": "#53c0f3",
+   "success": "#71ead2",
+   "warning": "#f3cc52",
+   "error": "#e24056"
+  }
+ },
+ {
+  "name": "Sunset",
+  "mode": "dark",
+  "colors": {
+   "primary": "#ff865b",
+   "secondary": "#fd6585",
+   "accent": "#f4d2a6",
+   "neutral": "#181c23",
+   "base-100": "#12131a",
+   "base-200": "#0e0f15",
+   "base-300": "#0a0b10",
+   "info": "#89b4f8",
+   "success": "#addfad",
+   "warning": "#f1c27b",
+   "error": "#ffbec4"
+  }
+ },
+ {
+  "name": "Cyberpunk",
+  "mode": "dark",
+  "colors": {
+   "primary": "#ff00aa",
+   "secondary": "#00d9ff",
+   "accent": "#ffff00",
+   "neutral": "#1e1e2e",
+   "base-100": "#2d1b69",
+   "base-200": "#251652",
+   "base-300": "#1d113b",
+   "info": "#00d9ff",
+   "success": "#00ff00",
+   "warning": "#ffff00",
+   "error": "#ff0055"
+  }
+ },
+ {
+  "name": "Midnight",
+  "mode": "dark",
+  "colors": {
+   "primary": "#4a5fc1",
+   "secondary": "#7c6eb1",
+   "accent": "#c27ba0",
+   "neutral": "#1d1d2e",
+   "base-100": "#0f0f1e",
+   "base-200": "#0c0c1a",
+   "base-300": "#090916",
+   "info": "#5e9fcf",
+   "success": "#6bb187",
+   "warning": "#dca561",
+   "error": "#d16470"
+  }
+ },
+ {
+  "name": "Vapor",
+  "mode": "dark",
+  "colors": {
+   "primary": "#ff71ce",
+   "secondary": "#01cdfe",
+   "accent": "#b967ff",
+   "neutral": "#2d1b4e",
+   "base-100": "#1a0b2e",
+   "base-200": "#150827",
+   "base-300": "#10051f",
+   "info": "#05ffa1",
+   "success": "#b1ede8",
+   "warning": "#fed766",
+   "error": "#fe4a49"
+  }
+ },
+ {
+  "name": "Twilight",
+  "mode": "dark",
+  "colors": {
+   "primary": "#8b5cf6",
+   "secondary": "#ec4899",
+   "accent": "#f59e0b",
+   "neutral": "#374151",
+   "base-100": "#1f2937",
+   "base-200": "#1a222e",
+   "base-300": "#151b25",
+   "info": "#3b82f6",
+   "success": "#10b981",
+   "warning": "#f59e0b",
+   "error": "#ef4444"
+  }
+ },
+ {
+  "name": "Matrix",
+  "mode": "dark",
+  "colors": {
+   "primary": "#00ff00",
+   "secondary": "#00cc00",
+   "accent": "#009900",
+   "neutral": "#1a1a1a",
+   "base-100": "#0d0d0d",
+   "base-200": "#080808",
+   "base-300": "#030303",
+   "info": "#00ffff",
+   "success": "#00ff00",
+   "warning": "#ffff00",
+   "error": "#ff0000"
+  }
+ },
+ {
+  "name": "Slate",
+  "mode": "dark",
+  "colors": {
+   "primary": "#64748b",
+   "secondary": "#475569",
+   "accent": "#94a3b8",
+   "neutral": "#334155",
+   "base-100": "#1e293b",
+   "base-200": "#1a2332",
+   "base-300": "#151d29",
+   "info": "#38bdf8",
+   "success": "#4ade80",
+   "warning": "#facc15",
+   "error": "#f87171"
+  }
+ },
+ {
+  "name": "Obsidian",
+  "mode": "dark",
+  "colors": {
+   "primary": "#8b5cf6",
+   "secondary": "#6366f1",
+   "accent": "#ec4899",
+   "neutral": "#27272a",
+   "base-100": "#18181b",
+   "base-200": "#141417",
+   "base-300": "#0f0f12",
+   "info": "#06b6d4",
+   "success": "#22c55e",
+   "warning": "#eab308",
+   "error": "#ef4444"
+  }
+ }
+]

@@ -1,0 +1,16 @@
+<div id="server-list" class="stack">
+	<p class="alert alert-success" role="status">{{ notice }}</p>
+{%- if servers.is_empty() %}
+	<section class="empty">
+		<h2>No MCP servers yet</h2>
+		<p>MCP servers provide tools, resources and prompts for your AI conversations. Add one, or import an mcp.json file.</p>
+		<button type="button" class="btn btn-primary" hx-get="/mcp-servers/new" hx-target="#server-dialog-body" hx-on::after-request="document.getElementById('server-dialog').showModal()">Add your first server</button>
+	</section>
+{%- else %}
+	<ul class="list" aria-label="MCP servers">
+		{%- for s in servers %}
+		{% include "partials/server_card.html" %}
+		{%- endfor %}
+	</ul>
+{%- endif %}
+</div>

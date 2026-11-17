@@ -1,0 +1,67 @@
+{# A tool result: text items, inline images, or raw JSON #}
+{% macro tool_result(r) %}
+<div class="tool-result{% if r.failed %} failed{% endif %}">
+	{%- if r.failed %}<p class="error-text"><strong>Tool returned an error</strong></p>{% endif %}
+	{%- if let Some(error) = r.error %}<p class="pre-wrap">{{ error }}</p>{% endif %}
+	{%- for item in r.items.iter() %}
+	{%- if let Some(text) = item.text %}<p class="pre-wrap">{{ text }}</p>{% endif %}
+	{%- if let Some(src) = item.image_src %}<img src="{{ src }}" alt="Tool output">{% endif %}
+	{%- endfor %}
+	{%- if let Some(raw) = r.raw_json %}
+	<details{% if r.items.is_empty() %} open{% endif %}>
+		<summary class="faint tiny">Raw result</summary>
+		<pre class="code">{{ raw }}</pre>
+	</details>
+	{%- endif %}
+</div>
+{% endmacro %}
+
+{# LLM rounds and the tool calls each round triggered #}
+{% macro timeline(steps) %}
+<ol class="timeline" aria-label="How this answer was made">
+	{%- for step in steps.iter() %}
+	<li>
+		<details class="step{% if step.is_error %} failed{% endif %}">
+			<summary>
+				<span class="step-kind">LLM · round {{ step.round }}</span>
+				<span class="step-summary{% if step.is_error %} error-text{% endif %}">{{ step.summary }}</span>
+				<span class="step-meta nums">{{ step.meta }}</span>
+			</summary>
+			<div class="step-body">
+				<p class="faint tiny">{{ step.sent_header }}</p>
+				<pre class="code">{{ step.sent_json }}</pre>
+				{%- if let Some(error) = step.error %}
+				<p class="error-text tiny"><strong>Error</strong></p>
+				<pre class="code">{{ error }}</pre>
+				{%- elif let Some(received) = step.received_json %}
+				<p class="faint tiny">{{ step.received_header }}</p>
+				<pre class="code">{{ received }}</pre>
+				{%- endif %}
+			</div>
+		</details>
+		{%- if let Some(text) = step.intermediate %}
+		<p class="step-text pre-wrap">{{ text }}</p>
+		{%- endif %}
+	</li>
+	{%- for call in step.tools.iter() %}
+	<li>
+		<details class="step tool">
+			<summary>
+				<span class="step-kind">Tool</span>
+				<span class="step-summary mono">{{ call.name }}</span>
+				{%- if call.done %}<span class="pill pill-success">done</span>{% else %}<span class="spinner" aria-label="running"></span>{% endif %}
+			</summary>
+			<div class="step-body">
+				<p class="faint tiny">Arguments</p>
+				<pre class="code">{{ call.args_json }}</pre>
+				{%- if call.done %}
+				<p class="faint tiny">Result</p>
+				{% call tool_result(call.result) %}{% endcall %}
+				{%- endif %}
+			</div>
+		</details>
+	</li>
+	{%- endfor %}
+	{%- endfor %}
+</ol>
+{% endmacro %}

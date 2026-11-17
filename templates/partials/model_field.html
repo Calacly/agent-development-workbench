@@ -1,0 +1,13 @@
+<div id="model-field">
+{%- if models.is_empty() %}
+	<input class="input" id="p-model" name="model" value="{{ current }}" placeholder="gpt-4o, claude-…, qwen…" autocomplete="off" required aria-describedby="p-model-status">
+{%- else %}
+	<select class="select" id="p-model" name="model" data-other required aria-describedby="p-model-status">
+		{%- for m in models %}
+		<option{% if m.as_str() == current.as_str() %} selected{% endif %}>{{ m }}</option>
+		{%- endfor %}
+		<option value="__other__">Other (type a model name)</option>
+	</select>
+{%- endif %}
+	<p id="p-model-status" class="help{% if is_error %} error{% endif %}" role="status">{{ message }}</p>
+</div>

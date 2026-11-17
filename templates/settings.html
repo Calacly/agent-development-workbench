@@ -1,0 +1,73 @@
+{% extends "app.html" %}
+{% block title %}Settings · MCP Client{% endblock %}
+{% block content %}
+<div class="page-header">
+	<div>
+		<h1>Settings</h1>
+		<p>Current theme: <strong>{{ current }}</strong></p>
+	</div>
+	<button type="button" class="btn btn-primary" data-open-dialog="generate-theme" data-reset>Generate theme with AI</button>
+</div>
+
+<section class="theme-section" aria-labelledby="themes-title">
+	<div class="row" style="justify-content:space-between;margin-bottom:1rem">
+		<h2 id="themes-title">Themes</h2>
+		<fieldset class="segmented">
+			<legend class="sr-only">Show</legend>
+			<label><input type="radio" name="theme-filter" value="all" checked> All ({{ themes.len() }})</label>
+			<label><input type="radio" name="theme-filter" value="light"> Light ({{ light_count }})</label>
+			<label><input type="radio" name="theme-filter" value="dark"> Dark ({{ dark_count }})</label>
+		</fieldset>
+	</div>
+	<ul class="theme-grid">
+		{%- for t in themes %}
+		<li data-mode="{{ t.mode }}">
+			<form hx-post="/settings/theme">
+				<input type="hidden" name="theme_name" value="{{ t.name }}">
+				<button type="submit" class="theme-card"{% if t.current %} aria-current="true"{% endif %}>
+					<span class="row" style="justify-content:space-between">
+						<strong>{{ t.name }}</strong>
+						{%- if t.current %}<span class="pill pill-primary">Current</span>{% elif t.custom %}<span class="pill">AI</span>{% endif %}
+					</span>
+					<span class="swatches" aria-hidden="true">
+						{%- for color in t.swatches %}<span style="background:{{ color }}"></span>{% endfor %}
+					</span>
+					<span class="faint tiny">{{ t.mode }}</span>
+				</button>
+			</form>
+			{%- if t.custom %}
+			<form hx-post="/settings/theme/delete" hx-confirm="Delete the theme “{{ t.name }}”?" class="theme-delete">
+				<input type="hidden" name="theme_name" value="{{ t.name }}">
+				<button type="submit" class="btn btn-sm btn-ghost btn-icon btn-danger" title="Delete" aria-label="Delete the theme {{ t.name }}">
+					<svg class="icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z"/></svg>
+				</button>
+			</form>
+			{%- endif %}
+		</li>
+		{%- endfor %}
+	</ul>
+</section>
+
+<dialog id="generate-theme" class="modal" aria-labelledby="generate-title">
+	<h2 id="generate-title">Generate a theme with AI</h2>
+	<form class="stack" hx-post="/settings/generate" hx-indicator="#generate-busy">
+		<p class="muted small">Your default LLM provider creates a color palette from your description.</p>
+		<div class="field">
+			<label for="g-prompt">Theme description</label>
+			<textarea class="textarea" id="g-prompt" name="prompt" rows="4" required placeholder="e.g. a warm sunset theme with orange and purple tones" aria-describedby="g-prompt-help"></textarea>
+			<p id="g-prompt-help" class="help">Say light or dark, and name colors, moods or inspiration.</p>
+		</div>
+		<div class="field">
+			<label for="g-name">Name (optional)</label>
+			<input class="input" id="g-name" name="name" placeholder="e.g. Ocean">
+		</div>
+		<p id="generate-error" class="alert alert-error" role="alert" data-clear-on-open></p>
+		<div class="dialog-actions">
+			<span id="generate-busy" class="htmx-indicator muted small"><span class="spinner" style="display:inline-block;vertical-align:-2px"></span> Generating…</span>
+			<span class="spacer"></span>
+			<button type="button" class="btn" data-close-dialog>Cancel</button>
+			<button type="submit" class="btn btn-primary">Generate</button>
+		</div>
+	</form>
+</dialog>
+{% endblock %}

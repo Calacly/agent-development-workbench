@@ -1,0 +1,57 @@
+{% extends "app.html" %}
+{% import "macros.html" as m %}
+{% block title %}Tools · {{ server.name }} · MCP Client{% endblock %}
+{% block content %}
+{% let page_title = "Tools" %}
+{% include "partials/server_subnav.html" %}
+{%- if let Some(error) = error %}<p class="alert alert-error" role="alert">{{ error }}</p>{% endif %}
+
+<div class="split">
+	<section class="panel" aria-labelledby="tool-list-title">
+		<h2 id="tool-list-title">Available tools ({{ tools.len() }})</h2>
+		<label class="sr-only" for="tool-filter">Filter tools</label>
+		<input id="tool-filter" class="input" type="search" placeholder="Filter tools…" data-filter-list="#tool-list" style="margin-block:0.75rem">
+		<ul id="tool-list" class="pick-list">
+			{%- for t in tools %}
+			<li>
+				<button type="button" hx-get="/mcp-servers/{{ server.id }}/tools/{{ t.name|urlencode }}" hx-target="#tool-detail">
+					<span class="mono">{{ t.name }}</span>
+					<span class="faint tiny clamp-2">{{ t.description }}</span>
+				</button>
+			</li>
+			{%- endfor %}
+		</ul>
+	</section>
+	<section id="tool-detail" class="panel" aria-live="polite">
+		<p class="muted">Select a tool to see its details and run it.</p>
+	</section>
+</div>
+
+<section class="panel" style="margin-top:1.5rem" aria-labelledby="llm-test-title">
+	<h2 id="llm-test-title">Test tools with an LLM</h2>
+	<p class="muted small" style="margin-block:0.25rem 1rem">Send a prompt to an LLM and let it use this server's tools.</p>
+	{%- if providers.is_empty() %}
+	<p class="muted">Add an <a href="/llm-providers">LLM provider</a> first.</p>
+	{%- else %}
+	<form class="stack" hx-post="/mcp-servers/{{ server.id }}/tools-test" hx-target="#llm-test-result" hx-indicator="#llm-test-busy">
+		<div class="field">
+			<label for="t-provider">LLM provider</label>
+			<select class="select" id="t-provider" name="provider_id" style="max-width:28rem">
+				{%- for p in providers %}
+				<option value="{{ p.id }}"{% if p.selected %} selected{% endif %}>{{ p.label }}</option>
+				{%- endfor %}
+			</select>
+		</div>
+		<div class="field">
+			<label for="t-prompt">Prompt</label>
+			<textarea class="textarea" id="t-prompt" name="prompt" rows="3" placeholder="e.g. Give me a random timestamp for tomorrow morning" required></textarea>
+		</div>
+		<div class="row">
+			<button type="submit" class="btn btn-primary">Send to LLM</button>
+			<span id="llm-test-busy" class="htmx-indicator muted small"><span class="spinner" style="display:inline-block;vertical-align:-2px"></span> Waiting for the LLM…</span>
+		</div>
+	</form>
+	<div id="llm-test-result" aria-live="polite" style="margin-top:1rem"></div>
+	{%- endif %}
+</section>
+{% endblock %}

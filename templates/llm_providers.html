@@ -1,0 +1,68 @@
+{% extends "app.html" %}
+{% block title %}LLM Providers · MCP Client{% endblock %}
+{% block content %}
+<div class="page-header">
+	<div>
+		<h1>LLM Providers</h1>
+		<p>Manage your AI model provider configurations</p>
+	</div>
+	<button type="button" class="btn btn-primary" data-open-dialog="add-provider" data-reset>
+		<svg class="icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 4a1 1 0 0 1 1 1v4h4a1 1 0 1 1 0 2h-4v4a1 1 0 1 1-2 0v-4H5a1 1 0 1 1 0-2h4V5a1 1 0 0 1 1-1Z"/></svg>
+		Add Provider
+	</button>
+</div>
+
+{% include "partials/provider_list.html" %}
+
+<dialog id="add-provider" class="modal" aria-labelledby="add-provider-title">
+	<h2 id="add-provider-title">Add LLM Provider</h2>
+	<form class="stack" hx-post="/llm-providers" hx-target="#provider-list" hx-swap="outerHTML" data-close-on-success>
+		<div class="field">
+			<label for="p-preset">Provider</label>
+			<select class="select" id="p-preset" data-preset="name:#p-name,base-url:#p-base-url,model:#p-model" aria-describedby="p-preset-help">
+				<option value="">Custom</option>
+				{%- for preset in presets %}
+				<option data-name="{{ preset.name }}" data-base-url="{{ preset.base_url }}" data-model="{{ preset.model }}">{{ preset.label }}</option>
+				{%- endfor %}
+			</select>
+			<p id="p-preset-help" class="help">Select a provider to fill in its URL and a model, or choose Custom</p>
+		</div>
+		<div class="field">
+			<label for="p-name">Provider name</label>
+			<input class="input" id="p-name" name="name" placeholder="e.g. My OpenAI account" required>
+		</div>
+		<div class="field">
+			<label for="p-base-url">Base URL</label>
+			<input class="input" id="p-base-url" name="base_url" type="url" placeholder="https://api.openai.com/v1" required>
+		</div>
+		<div class="field">
+			<label for="p-api-key">API key</label>
+			<input class="input" id="p-api-key" name="api_key" type="password" autocomplete="off" placeholder="sk-..." aria-describedby="p-api-key-help">
+			<p id="p-api-key-help" class="help">Stored encrypted. Leave empty for local servers such as Ollama.</p>
+		</div>
+		<div class="field">
+			<label for="p-model">Model</label>
+			<div class="field-row">
+				<div id="model-field">
+					<input class="input" id="p-model" name="model" placeholder="gpt-4o, claude-…, qwen…" autocomplete="off" required>
+				</div>
+				<button type="button" class="btn" hx-post="/llm-providers/models" hx-include="closest form" hx-target="#model-field" hx-indicator="this">
+					<span class="spinner htmx-indicator" aria-hidden="true"></span>
+					Load models
+				</button>
+			</div>
+		</div>
+		<p id="add-provider-test" class="status-line" role="status" data-clear-on-open></p>
+		<p id="add-provider-error" class="alert alert-error" role="alert" data-clear-on-open></p>
+		<div class="dialog-actions">
+			<button type="button" class="btn" hx-post="/llm-providers/test" hx-include="closest form" hx-target="#add-provider-test" hx-swap="outerHTML" hx-indicator="this">
+				<span class="spinner htmx-indicator" aria-hidden="true"></span>
+				Test
+			</button>
+			<span class="spacer"></span>
+			<button type="button" class="btn" data-close-dialog>Cancel</button>
+			<button type="submit" class="btn btn-primary">Add Provider</button>
+		</div>
+	</form>
+</dialog>
+{% endblock %}

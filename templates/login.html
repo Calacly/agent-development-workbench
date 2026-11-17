@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Sign in · MCP Client{% endblock %}
+{% block body %}
+<main class="auth">
+	<form class="auth-card" method="post" action="/login">
+		<div>
+			<h1>Sign in</h1>
+			<p class="muted small">to your MCP Client account</p>
+		</div>
+		{%- if let Some(error) = error %}
+		<p class="alert alert-error" role="alert">{{ error }}</p>
+		{%- endif %}
+		<input type="hidden" name="next" value="{{ next }}">
+		<div class="field">
+			<label for="username">Username</label>
+			<input class="input" id="username" name="username" value="{{ username }}" autocomplete="username" required autofocus>
+		</div>
+		<div class="field">
+			<label for="password">Password</label>
+			<input class="input" id="password" name="password" type="password" autocomplete="current-password" required>
+		</div>
+		<button class="btn btn-primary" type="submit">Sign in</button>
+		<p class="muted small">No account yet? <a href="/register">Create one</a></p>
+	</form>
+</main>
+{% endblock %}

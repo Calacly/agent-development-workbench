@@ -1,0 +1,17 @@
+<h2 class="mono">{{ name }}</h2>
+{%- if !description.is_empty() %}<p class="muted small" style="margin-top:0.25rem">{{ description }}</p>{% endif %}
+<details style="margin-block:0.75rem">
+	<summary class="small">Input schema ({{ required }} required)</summary>
+	<pre class="code">{{ schema_json }}</pre>
+</details>
+<form class="stack" hx-post="/mcp-servers/{{ server_id }}/tools/{{ name|urlencode }}" hx-target="#tool-result" hx-indicator="#tool-busy">
+	<div class="field">
+		<label for="tool-args">Arguments (JSON)</label>
+		<textarea class="textarea mono" id="tool-args" name="arguments" rows="8">{{ default_args }}</textarea>
+	</div>
+	<div class="row">
+		<button type="submit" class="btn btn-primary">Run tool</button>
+		<span id="tool-busy" class="htmx-indicator muted small"><span class="spinner" style="display:inline-block;vertical-align:-2px"></span> Running…</span>
+	</div>
+</form>
+<div id="tool-result" role="status" style="margin-top:1rem"></div>

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Create account · MCP Client{% endblock %}
+{% block body %}
+<main class="auth">
+	<form class="auth-card" method="post" action="/register">
+		<div>
+			<h1>Create account</h1>
+			<p class="muted small">for MCP Client</p>
+		</div>
+		{%- if let Some(error) = error %}
+		<p class="alert alert-error" role="alert">{{ error }}</p>
+		{%- endif %}
+		<div class="field">
+			<label for="username">Username</label>
+			<input class="input" id="username" name="username" value="{{ username }}" autocomplete="username" required autofocus>
+		</div>
+		<div class="field">
+			<label for="email">Email</label>
+			<input class="input" id="email" name="email" type="email" value="{{ email }}" autocomplete="email" required>
+		</div>
+		<div class="field">
+			<label for="password">Password</label>
+			<input class="input" id="password" name="password" type="password" autocomplete="new-password" minlength="8" aria-describedby="password-help" required>
+			<p id="password-help" class="help">At least 8 characters.</p>
+		</div>
+		<button class="btn btn-primary" type="submit">Create account</button>
+		<p class="muted small">Already registered? <a href="/login">Sign in</a></p>
+	</form>
+</main>
+{% endblock %}

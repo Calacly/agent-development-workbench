@@ -1,0 +1,13 @@
+<h2 class="mono">{{ p.name }}</h2>
+{%- if !p.description.is_empty() %}<p class="muted small" style="margin-top:0.25rem">{{ p.description }}</p>{% endif %}
+<form class="stack" style="margin-top:1rem" hx-post="/mcp-servers/{{ server_id }}/prompts/{{ p.name|urlencode }}" hx-target="#prompt-result">
+	{%- for a in p.args %}
+	<div class="field">
+		<label for="arg-{{ loop.index }}">{{ a.name }}{% if a.required %} <span aria-hidden="true">*</span>{% endif %}</label>
+		<input class="input" id="arg-{{ loop.index }}" name="arg_{{ a.name }}"{% if a.required %} required{% endif %}{% if !a.description.is_empty() %} aria-describedby="arg-help-{{ loop.index }}"{% endif %}>
+		{%- if !a.description.is_empty() %}<p id="arg-help-{{ loop.index }}" class="help">{{ a.description }}</p>{% endif %}
+	</div>
+	{%- endfor %}
+	<div><button type="submit" class="btn btn-primary">Get prompt</button></div>
+</form>
+<div id="prompt-result" role="status" style="margin-top:1rem"></div>
