@@ -1,4 +1,4 @@
-use mcp_client::{config::Config, metrics::MetricsRecorder, AppState};
+use mcp_client::{config::Config, AppState};
 use std::net::SocketAddr;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -32,15 +32,11 @@ async fn main() -> anyhow::Result<()> {
     // Initialize MCP client service
     let mcp_service = std::sync::Arc::new(mcp_client::services::mcp_client::McpClientService::new());
 
-    // Initialize metrics
-    let metrics_handle = MetricsRecorder::new().handle();
-
     // Build application state
     let state = AppState {
         db: db_pool,
         config: config.clone(),
         mcp_service,
-        metrics_handle,
         started_at: std::time::Instant::now(),
     };
 

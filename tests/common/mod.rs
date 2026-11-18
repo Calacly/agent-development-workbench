@@ -34,7 +34,6 @@ fn start_app() -> String {
                 db: mcp_client::app::connect_db(&config.database_url).await.unwrap(),
                 config,
                 mcp_service: std::sync::Arc::new(mcp_client::services::mcp_client::McpClientService::new()),
-                metrics_handle: mcp_client::metrics::MetricsRecorder::new().handle(),
                 started_at: std::time::Instant::now(),
             };
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();

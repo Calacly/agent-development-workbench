@@ -60,10 +60,6 @@ dotenvy = "0.15"
 chrono = { version = "0.4", features = ["serde"] }
 time = "0.3"
 
-# Metrics
-metrics = "0.21"
-metrics-exporter-prometheus = "0.13"
-
 # System interfaces (sandboxing on Unix)
 libc = "0.2"
 

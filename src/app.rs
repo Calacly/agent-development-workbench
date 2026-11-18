@@ -12,13 +12,12 @@ pub async fn connect_db(database_url: &str) -> anyhow::Result<SqlitePool> {
     Ok(pool)
 }
 
-/// The whole app: web UI, health, metrics and the JSON API.
+/// The whole app: web UI, health and the JSON API.
 pub fn router(state: AppState) -> Router {
     Router::new()
         // Server-rendered web UI (pages, fragments, static files)
         .merge(crate::web::routes(state.clone()))
         .route("/health", get(health))
-        .route("/metrics", get(crate::metrics::metrics_handler))
         .nest("/api/v1", routes::api_routes(state.clone()))
         .layer(CorsLayer::permissive())
         .with_state(state)
