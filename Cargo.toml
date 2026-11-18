@@ -16,12 +16,9 @@ path = "src/main.rs"
 [dependencies]
 # Async runtime and web framework
 tokio = { version = "1.42", features = ["full"] }
-axum = { version = "0.7", features = ["ws", "macros", "multipart"] }
+axum = { version = "0.7", features = ["ws", "multipart"] }
 axum-extra = { version = "0.9", features = ["cookie"] }
-tower = "0.5"
-tower-http = { version = "0.6", features = ["cors", "trace", "compression-full"] }
-http = "1.0"
-http-body-util = "0.1"
+tower-http = { version = "0.6", features = ["cors"] }
 futures = "0.3"
 
 # Serialization
@@ -34,7 +31,6 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite", "migrate", "mac
 # Authentication and security
 jsonwebtoken = "9.3"
 argon2 = "0.5"
-secrecy = "0.10"
 aes-gcm = "0.10"
 base64 = "0.22"
 rand = "0.8"
@@ -43,7 +39,6 @@ rand = "0.8"
 # "reqwest-native-tls": without a TLS feature rmcp's reqwest cannot reach any https:// MCP server
 rmcp = { version = "3.10", features = ["client", "reqwest-native-tls", "transport-child-process", "transport-streamable-http-client", "transport-streamable-http-client-reqwest"] }
 reqwest = { version = "0.12", features = ["json"] }
-sse-stream = "0.2"
 
 # Web UI: templates, embedded static files, Markdown
 askama = "0.16.1"
@@ -55,7 +50,7 @@ url = "2.5.8"
 
 # Logging
 tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
 
 # Errors, configuration, time
@@ -64,7 +59,6 @@ thiserror = "2.0"
 dotenvy = "0.15"
 chrono = { version = "0.4", features = ["serde"] }
 time = "0.3"
-uuid = { version = "1.11", features = ["v4", "serde"] }
 
 # Metrics
 metrics = "0.21"
@@ -72,3 +66,6 @@ metrics-exporter-prometheus = "0.13"
 
 # System interfaces (sandboxing on Unix)
 libc = "0.2"
+
+[dev-dependencies]
+uuid = { version = "1.11", features = ["v4"] }
