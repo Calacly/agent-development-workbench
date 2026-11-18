@@ -45,7 +45,7 @@ async fn main() -> anyhow::Result<()> {
     let app = mcp_client::app::router(state);
 
     // Run server
-    let addr = SocketAddr::from(([0, 0, 0, 0], config.port));
+    let addr = SocketAddr::new(config.host, config.port);
     tracing::info!("Starting server on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;

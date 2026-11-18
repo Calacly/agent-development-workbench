@@ -25,6 +25,7 @@ fn start_app() -> String {
             let db_path = std::env::temp_dir().join(format!("{DB_PREFIX}{}.db", Uuid::new_v4()));
             let config = mcp_client::config::Config {
                 database_url: format!("sqlite://{}?mode=rwc", db_path.display()),
+                host: std::net::IpAddr::from([127, 0, 0, 1]),
                 port: 0,
                 jwt_secret: "test-jwt-secret".to_string(),
                 jwt_expiration_hours: 1,

@@ -53,6 +53,8 @@ cargo run
 Open `http://localhost:3000` (or the `PORT` from `.env`). The first start
 creates the SQLite database and runs the migrations.
 
+The app listens on `127.0.0.1` only. Set `HOST=0.0.0.0` in `.env` to reach it from other machines.
+
 - HTML templates are compiled into the binary: after changing one, restart `cargo run`.
 - CSS and JavaScript in `static/` are read from disk in debug builds: reload the page.
 - For containerized MCP servers behind a VPN, see `CONTAINER_DNS` in [docs/sandbox.md](docs/sandbox.md).
