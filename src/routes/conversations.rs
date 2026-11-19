@@ -170,26 +170,22 @@ pub(crate) async fn delete_conversation(
     Extension(AuthUser { user_id, .. }): Extension<AuthUser>,
     Path(id): Path<i64>,
 ) -> AppResult<StatusCode> {
-    // Delete messages first (foreign key constraint)
-    sqlx::query("DELETE FROM messages WHERE conversation_id = ?")
-        .bind(id)
-        .execute(&state.db)
-        .await?;
+    // Ownership first: another user must not delete anything of this conversation
+    own_conversation(&state, user_id, id).await?;
 
-    let result = sqlx::query("DELETE FROM conversations WHERE id = ? AND user_id = ?")
-        .bind(id)
-        .bind(user_id)
-        .execute(&state.db)
-        .await?;
-
-    if result.rows_affected() == 0 {
-        return Err(AppError::NotFound("Conversation not found".to_string()));
-    }
-
+    // One transaction, and by hand: SQLite does not enforce the foreign keys here
+    let mut tx = state.db.begin().await?;
+    sqlx::query("DELETE FROM messages WHERE conversation_id = ?").bind(id).execute(&mut *tx).await?;
     sqlx::query("DELETE FROM conversation_disabled_servers WHERE conversation_id = ?")
         .bind(id)
-        .execute(&state.db)
+        .execute(&mut *tx)
         .await?;
+    sqlx::query("DELETE FROM conversations WHERE id = ? AND user_id = ?")
+        .bind(id)
+        .bind(user_id)
+        .execute(&mut *tx)
+        .await?;
+    tx.commit().await?;
 
     Ok(StatusCode::NO_CONTENT)
 }

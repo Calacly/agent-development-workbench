@@ -447,3 +447,46 @@ async fn test_conversation_servers_stay_private() {
         .unwrap();
     assert_eq!(anonymous.status(), StatusCode::UNAUTHORIZED);
 }
+
+#[tokio::test]
+async fn test_delete_conversation_of_another_user_keeps_its_messages() {
+    let app = setup_test_app().await;
+    let owner = app.register_and_login("owner", "owner@example.com", "testpass123").await;
+    let other = app.register_and_login("other", "other@example.com", "testpass123").await;
+    let conversation_id = create_conversation(&app, &owner, "Private").await;
+
+    // Without an LLM provider the request fails, but the user message is saved
+    app.client
+        .post(format!("{}/conversations/{}/messages", app.api_url, conversation_id))
+        .bearer_auth(&owner)
+        .json(&json!({ "content": "keep me" }))
+        .send()
+        .await
+        .unwrap();
+    let messages = |token: String| {
+        let client = app.client.clone();
+        let url = format!("{}/conversations/{}/messages", app.api_url, conversation_id);
+        async move { client.get(url).bearer_auth(token).send().await.unwrap().json::<Vec<serde_json::Value>>().await.unwrap() }
+    };
+    assert_eq!(messages(owner.clone()).await.len(), 1);
+
+    let foreign = app
+        .client
+        .delete(format!("{}/conversations/{}", app.api_url, conversation_id))
+        .bearer_auth(&other)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(foreign.status(), StatusCode::NOT_FOUND);
+    assert_eq!(messages(owner.clone()).await.len(), 1, "another user must not delete the messages");
+
+    // The owner can still delete it
+    let own = app
+        .client
+        .delete(format!("{}/conversations/{}", app.api_url, conversation_id))
+        .bearer_auth(&owner)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(own.status(), StatusCode::NO_CONTENT);
+}
