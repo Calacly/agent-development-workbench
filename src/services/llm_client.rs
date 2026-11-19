@@ -169,6 +169,14 @@ pub fn response_preview(response: &ChatCompletionResponse) -> (serde_json::Value
 /// Approximate characters per token, used to cap tool results without a tokenizer
 const CHARS_PER_TOKEN: usize = 4;
 
+/// LLM rounds per chat message before the chat stops asking the model again
+pub const MAX_LLM_ROUNDS: u32 = 10;
+
+/// Answer saved when a chat message reaches `MAX_LLM_ROUNDS`
+pub fn round_limit_message() -> String {
+    format!("Stopped after {MAX_LLM_ROUNDS} LLM rounds without a final answer.")
+}
+
 /// Shorten a tool result sent to the LLM to about `max_tokens` tokens and say
 /// so at the end, so large outputs (e.g. page snapshots) stay within the
 /// provider's tokens-per-minute limit. The full result is still stored and shown.

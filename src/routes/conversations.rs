@@ -1,7 +1,7 @@
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    routing::get,
+    routing::{get, put},
     Extension, Json, Router,
 };
 
@@ -9,8 +9,12 @@ use crate::{
     error::{AppError, AppResult},
     middleware::auth::AuthUser,
     models::{
-        conversation::{Conversation, CreateConversationRequest, LlmStep, Message, SendMessageRequest, StoredToolCall},
+        conversation::{
+            Conversation, ConversationServer, CreateConversationRequest, LlmStep, Message, SendMessageRequest,
+            SetServerEnabledRequest, StoredToolCall,
+        },
         llm_provider::LlmProvider,
+        mcp_server::McpServer,
     },
     services::llm_client::LlmClient,
     AppState,
@@ -21,6 +25,93 @@ pub fn routes() -> Router<AppState> {
         .route("/", get(list_conversations).post(create_conversation))
         .route("/:id", get(get_conversation).delete(delete_conversation))
         .route("/:id/messages", get(list_messages).post(send_message))
+        .route("/:id/servers", get(list_conversation_servers))
+        .route("/:id/servers/:server_id", put(set_conversation_server))
+}
+
+/// The conversation, if it belongs to the user
+async fn own_conversation(state: &AppState, user_id: i64, conversation_id: i64) -> AppResult<Conversation> {
+    sqlx::query_as::<_, Conversation>("SELECT * FROM conversations WHERE id = ? AND user_id = ?")
+        .bind(conversation_id)
+        .bind(user_id)
+        .fetch_optional(&state.db)
+        .await?
+        .ok_or_else(|| AppError::NotFound("Conversation not found".to_string()))
+}
+
+/// Remember the LLM provider of this message, so the chat preselects it next time
+pub(crate) async fn remember_provider(state: &AppState, conversation_id: i64, provider_id: i64) -> AppResult<()> {
+    sqlx::query("UPDATE conversations SET last_provider_id = ? WHERE id = ?")
+        .bind(provider_id)
+        .bind(conversation_id)
+        .execute(&state.db)
+        .await?;
+    Ok(())
+}
+
+/// The user's MCP servers that are switched on for this conversation. The chat
+/// offers the tools of those among them that are connected.
+pub(crate) async fn enabled_server_ids(state: &AppState, user_id: i64, conversation_id: i64) -> AppResult<Vec<i64>> {
+    Ok(sqlx::query_scalar::<_, i64>(
+        "SELECT id FROM mcp_servers WHERE user_id = ? AND id NOT IN \
+         (SELECT server_id FROM conversation_disabled_servers WHERE conversation_id = ?)",
+    )
+    .bind(user_id)
+    .bind(conversation_id)
+    .fetch_all(&state.db)
+    .await?)
+}
+
+// List the user's MCP servers with their on/off switch for this conversation
+pub(crate) async fn list_conversation_servers(
+    State(state): State<AppState>,
+    Extension(AuthUser { user_id, .. }): Extension<AuthUser>,
+    Path(conversation_id): Path<i64>,
+) -> AppResult<Json<Vec<ConversationServer>>> {
+    own_conversation(&state, user_id, conversation_id).await?;
+    let servers = sqlx::query_as::<_, McpServer>("SELECT * FROM mcp_servers WHERE user_id = ? ORDER BY name COLLATE NOCASE")
+        .bind(user_id)
+        .fetch_all(&state.db)
+        .await?;
+    let enabled = enabled_server_ids(&state, user_id, conversation_id).await?;
+    let mut list = Vec::with_capacity(servers.len());
+    for s in servers {
+        list.push(ConversationServer {
+            connected: state.mcp_service.is_connected(s.id).await,
+            enabled: enabled.contains(&s.id),
+            id: s.id,
+            name: s.name,
+        });
+    }
+    Ok(Json(list))
+}
+
+// Switch one MCP server on or off for this conversation
+pub(crate) async fn set_conversation_server(
+    State(state): State<AppState>,
+    Extension(AuthUser { user_id, .. }): Extension<AuthUser>,
+    Path((conversation_id, server_id)): Path<(i64, i64)>,
+    Json(req): Json<SetServerEnabledRequest>,
+) -> AppResult<Json<ConversationServer>> {
+    own_conversation(&state, user_id, conversation_id).await?;
+    let server = sqlx::query_as::<_, McpServer>("SELECT * FROM mcp_servers WHERE id = ? AND user_id = ?")
+        .bind(server_id)
+        .bind(user_id)
+        .fetch_optional(&state.db)
+        .await?
+        .ok_or_else(|| AppError::NotFound("MCP server not found".to_string()))?;
+    let sql = if req.enabled {
+        "DELETE FROM conversation_disabled_servers WHERE conversation_id = ? AND server_id = ?"
+    } else {
+        "INSERT OR IGNORE INTO conversation_disabled_servers (conversation_id, server_id) VALUES (?, ?)"
+    };
+    sqlx::query(sql).bind(conversation_id).bind(server_id).execute(&state.db).await?;
+    Ok(Json(ConversationServer {
+        connected: state.mcp_service.is_connected(server.id).await,
+        enabled: req.enabled,
+        id: server.id,
+        name: server.name,
+    }))
 }
 
 // List all conversations for the authenticated user
@@ -94,6 +185,11 @@ pub(crate) async fn delete_conversation(
     if result.rows_affected() == 0 {
         return Err(AppError::NotFound("Conversation not found".to_string()));
     }
+
+    sqlx::query("DELETE FROM conversation_disabled_servers WHERE conversation_id = ?")
+        .bind(id)
+        .execute(&state.db)
+        .await?;
 
     Ok(StatusCode::NO_CONTENT)
 }
@@ -173,6 +269,8 @@ async fn send_message(
         })?
     };
 
+    remember_provider(&state, conversation_id, provider.id).await?;
+
     // Decrypt API key
     let api_key = provider.api_key(&state.config)?;
 
@@ -184,9 +282,9 @@ async fn send_message(
     .fetch_all(&state.db)
     .await?;
 
-    // Get all tools from connected MCP servers
-    // Only this user's servers: tools of other users' servers must not be offered
-    let own_servers = crate::services::mcp_client::user_server_ids(&state.db, user_id).await?;
+    // Tools of the user's connected MCP servers that are switched on for this
+    // conversation; tools of other users' servers must never be offered
+    let own_servers = enabled_server_ids(&state, user_id, conversation_id).await?;
     let mcp_tools_map = state.mcp_service.list_tools_for_servers(&own_servers).await?;
     let mut all_mcp_tools = Vec::new();
     let mut tool_to_server_map: std::collections::HashMap<String, i64> = std::collections::HashMap::new();
@@ -232,16 +330,22 @@ async fn send_message(
     );
 
     // Tool calling loop - keep calling LLM until we get a final response
-    let mut max_iterations = 10;
+    let mut rounds_left = crate::services::llm_client::MAX_LLM_ROUNDS;
     let mut stored_tool_calls: Vec<StoredToolCall> = Vec::new();
     // Trace of every LLM round for the chat timeline (same as the WebSocket chat)
     let mut llm_steps: Vec<LlmStep> = Vec::new();
     let mut sent_until = llm_messages.len().saturating_sub(1);
     let assistant_content = loop {
-        if max_iterations == 0 {
-            return Err(AppError::Internal("Too many tool calls, aborting".to_string()));
+        if rounds_left == 0 {
+            // Save the rounds so far with a note instead of failing without a trace
+            tracing::warn!(
+                "Chat in conversation {} stopped after {} LLM rounds without a final answer",
+                conversation_id,
+                crate::services::llm_client::MAX_LLM_ROUNDS
+            );
+            break crate::services::llm_client::round_limit_message();
         }
-        max_iterations -= 1;
+        rounds_left -= 1;
 
         let request = crate::services::llm_client::request_preview(&model_name, &llm_messages, &openai_tools, sent_until);
         sent_until = llm_messages.len();
@@ -273,8 +377,9 @@ async fn send_message(
         let choice = response.choices.first()
             .ok_or_else(|| AppError::Internal("No response from LLM".to_string()))?;
 
-        // Check if LLM wants to call tools
-        if let Some(tool_calls) = &choice.message.tool_calls {
+        // Check if LLM wants to call tools. Some servers (LM Studio) send
+        // "tool_calls": [] with a final answer; that is no tool request.
+        if let Some(tool_calls) = choice.message.tool_calls.as_ref().filter(|calls| !calls.is_empty()) {
             tracing::info!("LLM requested {} tool calls", tool_calls.len());
 
             // Add assistant message with tool calls to history

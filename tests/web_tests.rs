@@ -193,6 +193,64 @@ async fn chat_pages_create_redirect_and_stay_private() {
 }
 
 #[tokio::test]
+async fn pages_show_the_app_version() {
+    let client = client();
+    let (cookie, _) = register(&client).await;
+    let html = client.get(format!("{}/dashboard", base_url())).header(header::COOKIE, &cookie).send().await.unwrap().text().await.unwrap();
+    assert!(html.contains(&format!("v{}</span>", env!("CARGO_PKG_VERSION"))), "{html}");
+}
+
+#[tokio::test]
+async fn chat_page_lists_mcp_servers_with_their_switch() {
+    let client = client();
+    let (cookie, _) = register(&client).await;
+    let created = client
+        .post(format!("{}/chat", base_url()))
+        .header(header::COOKIE, &cookie)
+        .header("HX-Request", "true")
+        .form(&[("title", "Tools")])
+        .send()
+        .await
+        .unwrap();
+    let target = created.headers()["HX-Redirect"].to_str().unwrap().to_string();
+    let conversation_id = target.trim_start_matches("/chat/");
+
+    // No servers yet: no picker
+    let page = client.get(format!("{}{target}", base_url())).header(header::COOKIE, &cookie).send().await.unwrap();
+    assert!(!page.text().await.unwrap().contains("server-picker"));
+
+    let server: serde_json::Value = client
+        .post(format!("{}/api/v1/mcp-servers", base_url()))
+        .header(header::COOKIE, &cookie)
+        .json(&serde_json::json!({ "name": "Git", "server_type": "stdio", "config": { "command": "uvx", "args": [], "env": {} } }))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    let server_id = server["id"].as_i64().unwrap();
+
+    let html = client.get(format!("{}{target}", base_url())).header(header::COOKIE, &cookie).send().await.unwrap().text().await.unwrap();
+    assert!(html.contains(&format!("data-server-id=\"{server_id}\" checked")), "{html}");
+    assert!(html.contains("not connected"), "{html}");
+    assert!(html.contains(">1/1<"), "{html}");
+
+    // The page's fetch switches it off with the session cookie
+    let off = client
+        .put(format!("{}/api/v1/conversations/{conversation_id}/servers/{server_id}", base_url()))
+        .header(header::COOKIE, &cookie)
+        .json(&serde_json::json!({ "enabled": false }))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(off.status(), StatusCode::OK);
+    let html = client.get(format!("{}{target}", base_url())).header(header::COOKIE, &cookie).send().await.unwrap().text().await.unwrap();
+    assert!(html.contains(&format!("data-server-id=\"{server_id}\">")), "{html}");
+    assert!(html.contains(">0/1<"), "{html}");
+}
+
+#[tokio::test]
 async fn settings_choose_a_theme_that_the_next_page_uses() {
     let client = client();
     let (cookie, _) = register(&client).await;

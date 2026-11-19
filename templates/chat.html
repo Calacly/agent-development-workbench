@@ -55,6 +55,20 @@
 					<option value="{{ p.id }}"{% if p.selected %} selected{% endif %}>{{ p.label }}</option>
 					{%- endfor %}
 				</select>
+				{%- if !servers.is_empty() %}
+				<details class="server-picker">
+					<summary class="faint">MCP servers <span class="nums" data-servers-count>{{ self.servers_on() }}/{{ servers.len() }}</span></summary>
+					<fieldset class="server-picker-list">
+						<legend class="sr-only">MCP servers whose tools this conversation offers</legend>
+						{%- for s in servers %}
+						<label class="checkbox-row">
+							<input type="checkbox" data-server-id="{{ s.id }}"{% if s.enabled %} checked{% endif %}>
+							<span>{{ s.name }}{% if !s.connected %} <span class="faint tiny">not connected</span>{% endif %}</span>
+						</label>
+						{%- endfor %}
+					</fieldset>
+				</details>
+				{%- endif %}
 				<span class="spacer"></span>
 				<span id="chat-status" class="faint tiny" role="status"></span>
 			</div>
@@ -62,7 +76,7 @@
 	{%- else %}
 		<div class="empty" style="margin:auto;max-width:28rem">
 			<h2>Start a conversation</h2>
-			<p>Chat with your LLM providers. Tools of your connected MCP servers are available to the model.</p>
+			<p>Chat with your LLM providers. Tools of your connected MCP servers are available to the model; switch servers off per conversation below the message box.</p>
 			<button type="button" class="btn btn-primary" data-open-dialog="new-chat" data-reset>New chat</button>
 		</div>
 	{%- endif %}

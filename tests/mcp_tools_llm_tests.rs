@@ -225,7 +225,9 @@ async fn start_tool_listing_llm() -> String {
 }
 
 /// Ask the chat which tools it offers the LLM, as the given user.
-async fn offered_tools(app: &common::TestApp, token: &str, llm: &str) -> String {
+/// Tool names the chat offers to the LLM; `switch_off` is a server switched
+/// off for the new conversation before the message is sent.
+async fn offered_tools(app: &common::TestApp, token: &str, llm: &str, switch_off: Option<i64>) -> String {
     let client = &app.client;
     client
         .post(format!("{}/llm-providers", app.api_url))
@@ -244,6 +246,16 @@ async fn offered_tools(app: &common::TestApp, token: &str, llm: &str) -> String 
         .json()
         .await
         .unwrap();
+    if let Some(server_id) = switch_off {
+        let off = client
+            .put(format!("{}/conversations/{}/servers/{server_id}", app.api_url, conversation["id"]))
+            .bearer_auth(token)
+            .json(&json!({ "enabled": false }))
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(off.status(), StatusCode::OK);
+    }
     let message: Value = client
         .post(format!("{}/conversations/{}/messages", app.api_url, conversation["id"]))
         .bearer_auth(token)
@@ -294,8 +306,10 @@ async fn test_chat_offers_only_the_users_own_tools() {
     assert_eq!(connect.status(), StatusCode::OK);
 
     let llm = start_tool_listing_llm().await;
-    let owner_sees = offered_tools(&app, &owner, &llm).await;
-    let other_sees = offered_tools(&app, &other, &llm).await;
+    let owner_sees = offered_tools(&app, &owner, &llm, None).await;
+    let other_sees = offered_tools(&app, &other, &llm, None).await;
+    // A conversation with the server switched off gets none of its tools
+    let switched_off_sees = offered_tools(&app, &owner, &llm, Some(server_id)).await;
 
     let _ = app
         .client
@@ -307,6 +321,7 @@ async fn test_chat_offers_only_the_users_own_tools() {
 
     assert!(owner_sees.split(',').any(|t| t.trim_start_matches("tools: ") == "echo"), "owner: {owner_sees}");
     assert!(!other_sees.contains("echo"), "another user's chat must not see the owner's tools: {other_sees}");
+    assert!(!switched_off_sees.contains("echo"), "a switched-off server must not offer tools: {switched_off_sees}");
 }
 
 #[tokio::test]
@@ -399,4 +414,119 @@ async fn test_chat_records_llm_steps_between_tool_calls() {
     assert_eq!(steps[1]["request"]["new_messages"][1]["content"], "good morning");
     assert_eq!(steps[1]["response"]["content"], "The tool said: good morning");
     assert_eq!(steps[1]["tool_call_indices"], json!([]));
+}
+
+/// Mock LLM that asks for `echo` in every round and never answers
+async fn start_looping_llm() -> String {
+    let app = Router::new().route(
+        "/v1/chat/completions",
+        post(|Json(body): Json<Value>| async move {
+            let round = body["messages"].as_array().map(|m| m.len()).unwrap_or(0);
+            Json(json!({
+                "id": "chatcmpl-mock",
+                "object": "chat.completion",
+                "created": 0,
+                "model": body["model"],
+                "choices": [{
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": null,
+                        "tool_calls": [{
+                            "id": format!("call_{round}"),
+                            "type": "function",
+                            "function": { "name": "echo", "arguments": format!("{{\"text\":\"round {round}\"}}") }
+                        }]
+                    },
+                    "finish_reason": "tool_calls"
+                }],
+                "usage": { "prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2 }
+            }))
+        }),
+    );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    tokio::spawn(async move { axum::serve(listener, app).await.unwrap() });
+    format!("http://{addr}/v1")
+}
+
+#[tokio::test]
+#[ignore] // Requires uv and network access
+async fn test_chat_saves_rounds_when_the_round_limit_is_reached() {
+    let app = setup_test_app().await;
+    let token = app.register_and_login("loop", "loop@example.com", "testpass123").await;
+    let llm = start_looping_llm().await;
+    app.client
+        .post(format!("{}/llm-providers", app.api_url))
+        .bearer_auth(&token)
+        .json(&json!({ "name": "Loop", "base_url": llm, "api_key": "k", "model": "mock-model", "is_default": true }))
+        .send()
+        .await
+        .unwrap();
+
+    let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/echo_server_v2.py");
+    let server: Value = app
+        .client
+        .post(format!("{}/mcp-servers", app.api_url))
+        .bearer_auth(&token)
+        .json(&json!({
+            "name": "echo",
+            "server_type": "stdio",
+            "config": { "command": "uv", "args": ["run", "--quiet", "--script", fixture], "env": {} },
+            "use_container": false
+        }))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    let server_id = server["id"].as_i64().unwrap();
+    let connect = app
+        .client
+        .post(format!("{}/mcp-servers/{server_id}/connect", app.api_url))
+        .bearer_auth(&token)
+        .json(&json!({}))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(connect.status(), StatusCode::OK);
+
+    let conversation: Value = app
+        .client
+        .post(format!("{}/conversations", app.api_url))
+        .bearer_auth(&token)
+        .json(&json!({ "title": "loop" }))
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+    let response = app
+        .client
+        .post(format!("{}/conversations/{}/messages", app.api_url, conversation["id"]))
+        .bearer_auth(&token)
+        .json(&json!({ "content": "keep going" }))
+        .send()
+        .await
+        .unwrap();
+    let status = response.status();
+    let message: Value = response.json().await.unwrap();
+
+    let _ = app
+        .client
+        .post(format!("{}/mcp-servers/{server_id}/disconnect", app.api_url))
+        .bearer_auth(&token)
+        .json(&json!({}))
+        .send()
+        .await;
+
+    // Not an internal error: the rounds are saved with a clear note
+    assert_eq!(status, StatusCode::OK, "{message}");
+    assert_eq!(message["content"], "Stopped after 10 LLM rounds without a final answer.");
+    let steps: Vec<Value> = serde_json::from_str(message["llm_steps"].as_str().unwrap()).unwrap();
+    assert_eq!(steps.len(), 10);
+    let calls: Vec<Value> = serde_json::from_str(message["tool_calls"].as_str().unwrap()).unwrap();
+    assert_eq!(calls.len(), 10);
 }

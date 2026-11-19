@@ -16,14 +16,6 @@ use chrono::Local;
 use std::fs;
 use std::path::PathBuf;
 
-/// Ids of the MCP servers that belong to a user
-pub async fn user_server_ids(db: &sqlx::SqlitePool, user_id: i64) -> AppResult<Vec<i64>> {
-    Ok(sqlx::query_scalar::<_, i64>("SELECT id FROM mcp_servers WHERE user_id = ?")
-        .bind(user_id)
-        .fetch_all(db)
-        .await?)
-}
-
 /// Parse container parameters string into individual arguments
 /// Examples: "-v /my/data:/data --cap-add SYS_ADMIN" -> ["-v", "/my/data:/data", "--cap-add", "SYS_ADMIN"]
 fn parse_container_params(params: &str) -> Vec<String> {
@@ -518,7 +510,7 @@ impl McpClientService {
 
     /// List tools from all connected servers
     /// Tools of the given connected servers. Callers pass the requesting
-    /// user's server ids (see `user_server_ids`), so one user's chat never
+    /// user's server ids (see `enabled_server_ids` in routes::conversations), so one user's chat never
     /// sees or calls another user's servers.
     pub async fn list_tools_for_servers(&self, server_ids: &[i64]) -> AppResult<HashMap<i64, Vec<Tool>>> {
         let clients = self.clients.read().await;

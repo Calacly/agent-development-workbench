@@ -181,6 +181,11 @@ pre {
 	text-decoration: none;
 }
 
+.app-version {
+	margin-inline-start: -1rem;
+	white-space: nowrap;
+}
+
 .nav {
 	display: flex;
 	gap: 0.25rem;
@@ -1397,4 +1402,32 @@ pre.code {
 	position: absolute;
 	right: 0.4rem;
 	bottom: 0.4rem;
+}
+
+/* MCP servers on/off per conversation, below the message box */
+.server-picker {
+	position: relative;
+}
+
+.server-picker > summary {
+	cursor: pointer;
+}
+
+.server-picker-list {
+	position: absolute;
+	bottom: calc(100% + 0.4rem);
+	left: 0;
+	z-index: 10;
+	display: grid;
+	gap: 0.4rem;
+	min-width: 14rem;
+	max-height: 50vh;
+	overflow-y: auto;
+	margin: 0;
+	padding: 0.6rem 0.75rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	background: var(--color-base-100);
+	color: var(--color-base-content);
+	box-shadow: 0 10px 30px rgb(0 0 0 / 0.12);
 }

@@ -16,7 +16,10 @@ use super::{render, theme, user_message, Layout, WebResult};
 use crate::{
     middleware::auth::AuthUser,
     models::user_settings::{DeleteThemeRequest, GenerateThemeRequest, UpdateSettingsRequest},
-    routes::settings::{delete_theme, generate_theme, get_settings, update_settings},
+    routes::{
+        llm_providers::list_providers,
+        settings::{delete_theme, generate_theme, get_settings, update_settings},
+    },
     AppState,
 };
 
@@ -44,6 +47,8 @@ struct SettingsPage {
     current: String,
     light_count: usize,
     dark_count: usize,
+    /// LLM providers for theme generation, the default one preselected
+    providers: Vec<super::chat::ProviderChoice>,
 }
 
 fn card(t: &theme::Theme, custom: bool, current: &str) -> ThemeCard {
@@ -70,7 +75,16 @@ async fn page(State(state): State<AppState>, Extension(user): Extension<AuthUser
     let light_count = themes.iter().filter(|t| t.mode == "light").count();
     let dark_count = themes.len() - light_count;
     let current = themes.iter().find(|t| t.current).map(|t| t.name.clone()).unwrap_or(settings.theme_name);
-    render(SettingsPage { layout: Layout::for_user(&state, &user, "").await?, themes, current, light_count, dark_count })
+    let Json(providers) = list_providers(State(state.clone()), Extension(user.clone())).await?;
+    let providers = providers
+        .into_iter()
+        .map(|p| super::chat::ProviderChoice {
+            selected: p.is_default,
+            id: p.id,
+            label: format!("{} · {}", p.name, p.model.unwrap_or_default()),
+        })
+        .collect();
+    render(SettingsPage { layout: Layout::for_user(&state, &user, "").await?, themes, current, light_count, dark_count, providers })
 }
 
 /// Reload the page so it is rendered with the new theme
@@ -107,6 +121,9 @@ struct GenerateForm {
     prompt: String,
     #[serde(default)]
     name: String,
+    /// Empty: the default provider
+    #[serde(default)]
+    provider_id: String,
 }
 
 async fn generate(
@@ -128,6 +145,7 @@ async fn generate(
     let request = GenerateThemeRequest {
         prompt: form.prompt,
         custom_name: Some(form.name.trim().to_string()).filter(|n| !n.is_empty()),
+        provider_id: form.provider_id.trim().parse().ok(),
     };
     match generate_theme(State(state.clone()), Extension(user.clone()), Json(request)).await {
         Ok(Json(generated)) => {
@@ -135,6 +153,9 @@ async fn generate(
             let _ = update_settings(State(state), Extension(user), Json(UpdateSettingsRequest { theme_name: generated.theme.name })).await?;
             Ok(refresh())
         }
-        Err(e) => Ok(error(user_message(&e))),
+        Err(e) => {
+            tracing::warn!("Theme generation failed for user {}: {}", user.user_id, e);
+            Ok(error(user_message(&e)))
+        }
     }
 }

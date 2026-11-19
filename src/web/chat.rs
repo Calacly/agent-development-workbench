@@ -18,9 +18,12 @@ use super::{
 };
 use crate::{
     middleware::auth::AuthUser,
-    models::conversation::{Conversation, CreateConversationRequest, LlmStep, Message, StoredToolCall},
+    models::conversation::{Conversation, ConversationServer, CreateConversationRequest, LlmStep, Message, StoredToolCall},
     routes::{
-        conversations::{create_conversation, delete_conversation, get_conversation, list_conversations, list_messages},
+        conversations::{
+            create_conversation, delete_conversation, get_conversation, list_conversation_servers, list_conversations,
+            list_messages,
+        },
         llm_providers::list_providers,
     },
     AppState,
@@ -114,6 +117,14 @@ struct ChatPage {
     current: Option<Conversation>,
     messages: Vec<MessageView>,
     providers: Vec<ProviderChoice>,
+    /// The user's MCP servers with their switch for the current conversation
+    servers: Vec<ConversationServer>,
+}
+
+impl ChatPage {
+    fn servers_on(&self) -> usize {
+        self.servers.iter().filter(|s| s.enabled).count()
+    }
 }
 
 #[derive(Template)]
@@ -125,14 +136,18 @@ struct MessageFragment {
 async fn page_data(state: &AppState, user: &AuthUser, current: Option<Conversation>) -> WebResult<ChatPage> {
     let Json(conversations) = list_conversations(State(state.clone()), Extension(user.clone())).await?;
     let current_id = current.as_ref().map(|c| c.id);
-    let messages = match current_id {
+    let (messages, servers) = match current_id {
         Some(id) => {
             let Json(list) = list_messages(State(state.clone()), Extension(user.clone()), Path(id)).await?;
-            list.into_iter().map(MessageView::from).collect()
+            let Json(servers) = list_conversation_servers(State(state.clone()), Extension(user.clone()), Path(id)).await?;
+            (list.into_iter().map(MessageView::from).collect(), servers)
         }
-        None => Vec::new(),
+        None => (Vec::new(), Vec::new()),
     };
     let Json(providers) = list_providers(State(state.clone()), Extension(user.clone())).await?;
+    // Preselect the provider of the conversation's last message if it still
+    // exists, otherwise the default provider (none selected: the first one shows)
+    let last_used = current.as_ref().and_then(|c| c.last_provider_id).filter(|id| providers.iter().any(|p| p.id == *id));
     Ok(ChatPage {
         layout: Layout::for_user(state, user, "/chat").await?,
         conversations: conversations
@@ -146,9 +161,17 @@ async fn page_data(state: &AppState, user: &AuthUser, current: Option<Conversati
             .collect(),
         current,
         messages,
+        servers,
         providers: providers
             .into_iter()
-            .map(|p| ProviderChoice { id: p.id, label: format!("{} · {}", p.name, p.model.unwrap_or_default()), selected: p.is_default })
+            .map(|p| ProviderChoice {
+                selected: match last_used {
+                    Some(id) => p.id == id,
+                    None => p.is_default,
+                },
+                id: p.id,
+                label: format!("{} · {}", p.name, p.model.unwrap_or_default()),
+            })
             .collect(),
     })
 }

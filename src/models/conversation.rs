@@ -16,6 +16,9 @@ pub struct Conversation {
     pub title: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    /// LLM provider used for the last message (may point to a deleted provider)
+    #[sqlx(default)]
+    pub last_provider_id: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -51,6 +54,22 @@ pub struct LlmStep {
 #[derive(Debug, Deserialize)]
 pub struct CreateConversationRequest {
     pub title: String,
+}
+
+/// One of the user's MCP servers as seen from a conversation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ConversationServer {
+    pub id: i64,
+    pub name: String,
+    /// Connected right now (only connected servers offer tools)
+    pub connected: bool,
+    /// Switched on for this conversation
+    pub enabled: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct SetServerEnabledRequest {
+    pub enabled: bool,
 }
 
 #[derive(Debug, Deserialize)]

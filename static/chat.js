@@ -74,23 +74,71 @@
 		scrollDown();
 	}
 
-	function addToolCall(name) {
+	// MCP tool arguments arrive as a JSON string or as an object
+	const pretty = (value) => {
+		if (typeof value === 'string') {
+			try {
+				return JSON.stringify(JSON.parse(value), null, 2);
+			} catch {
+				return value;
+			}
+		}
+		return JSON.stringify(value ?? {}, null, 2);
+	};
+
+	function addToolCall(name, args) {
 		const { timeline } = liveView();
 		const r = row('Tool', name, null, 'tool');
 		r.sum.querySelector('.step-summary').classList.add('mono');
 		const spinner = el('span', 'spinner');
 		spinner.setAttribute('aria-label', 'running');
 		r.sum.append(spinner);
+		const body = el('div', 'step-body');
+		body.append(el('p', 'faint tiny', 'Arguments'), el('pre', 'code', pretty(args)));
+		r.details.append(body);
 		r.li.dataset.tool = name;
 		timeline.append(r.li);
 		scrollDown();
 	}
 
-	function toolDone(name) {
+	// Same parts as the saved view (macros.html tool_result): text items, images, raw JSON
+	function toolResult(result) {
+		const failed = result?.isError === true;
+		const box = el('div', `tool-result${failed ? ' failed' : ''}`);
+		if (failed) {
+			const p = el('p', 'error-text');
+			p.append(el('strong', null, 'Tool returned an error'));
+			box.append(p);
+		}
+		const items = Array.isArray(result?.content) ? result.content : [];
+		let shown = 0;
+		for (const item of items) {
+			if (item?.type === 'text' && typeof item.text === 'string') {
+				box.append(el('p', 'pre-wrap', item.text));
+				shown++;
+			} else if (item?.type === 'image' && typeof item.data === 'string' && /^image\/[\w.+-]+$/.test(item.mimeType ?? '')) {
+				const img = el('img');
+				img.src = `data:${item.mimeType};base64,${item.data}`;
+				img.alt = 'Tool output';
+				box.append(img);
+				shown++;
+			}
+		}
+		const raw = el('details');
+		if (!shown) raw.open = true;
+		raw.append(el('summary', 'faint tiny', 'Raw result'), el('pre', 'code', JSON.stringify(result, null, 2)));
+		box.append(raw);
+		return box;
+	}
+
+	function toolDone(name, result) {
 		const pending = [...live?.timeline.querySelectorAll('li[data-tool]') ?? []].find(
 			(li) => li.dataset.tool === name && li.querySelector('.spinner')
 		);
-		pending?.querySelector('.spinner')?.replaceWith(el('span', 'pill pill-success', 'done'));
+		if (!pending) return;
+		const failed = result?.isError === true;
+		pending.querySelector('.spinner').replaceWith(el('span', `pill ${failed ? 'pill-error' : 'pill-success'}`, failed ? 'error' : 'done'));
+		pending.querySelector('.step-body')?.append(el('p', 'faint tiny', 'Result'), toolResult(result));
 	}
 
 	async function complete(messageId) {
@@ -131,10 +179,10 @@
 				addStep(data.step);
 				break;
 			case 'tool_call':
-				addToolCall(data.tool_name);
+				addToolCall(data.tool_name, data.arguments);
 				break;
 			case 'tool_result':
-				toolDone(data.tool_name);
+				toolDone(data.tool_name, data.result);
 				break;
 			case 'assistant_complete':
 				complete(data.message_id);
@@ -193,6 +241,34 @@
 			send();
 		}
 	});
+
+	// MCP servers on or off for this conversation; the next message uses the new choice
+	const serversCount = document.querySelector('[data-servers-count]');
+	const serverBoxes = [...document.querySelectorAll('input[data-server-id]')];
+	const countServers = () => {
+		if (serversCount) serversCount.textContent = `${serverBoxes.filter((b) => b.checked).length}/${serverBoxes.length}`;
+	};
+	serverBoxes.forEach((box) =>
+		box.addEventListener('change', async () => {
+			countServers();
+			box.disabled = true;
+			try {
+				const response = await fetch(`/api/v1/conversations/${conversationId}/servers/${box.dataset.serverId}`, {
+					method: 'PUT',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ enabled: box.checked }),
+				});
+				if (!response.ok) throw new Error(`HTTP ${response.status}`);
+				errorBox.textContent = '';
+			} catch {
+				box.checked = !box.checked;
+				countServers();
+				errorBox.textContent = 'Could not change the MCP server for this conversation.';
+			} finally {
+				box.disabled = false;
+			}
+		})
+	);
 
 	connect();
 	scrollDown();

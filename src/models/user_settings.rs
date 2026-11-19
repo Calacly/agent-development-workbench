@@ -48,6 +48,9 @@ pub struct UpdateSettingsRequest {
 pub struct GenerateThemeRequest {
     pub prompt: String,
     pub custom_name: Option<String>,
+    /// LLM provider to use; the default provider when missing
+    #[serde(default)]
+    pub provider_id: Option<i64>,
 }
 
 #[derive(Debug, Serialize)]

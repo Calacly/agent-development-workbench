@@ -1,6 +1,6 @@
 [package]
 name = "mcp-client"
-version = "0.1.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["MCP Client Contributors"]
 license = "MIT"
@@ -65,3 +65,5 @@ libc = "0.2"
 
 [dev-dependencies]
 uuid = { version = "1.11", features = ["v4"] }
+# WebSocket client for the chat tests (same version axum uses)
+tokio-tungstenite = "0.24"

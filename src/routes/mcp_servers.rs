@@ -220,6 +220,12 @@ pub(crate) async fn delete_server(
         return Err(AppError::NotFound("MCP server not found".to_string()));
     }
 
+    // SQLite does not enforce the foreign keys here, so remove the chat switches by hand
+    sqlx::query("DELETE FROM conversation_disabled_servers WHERE server_id = ?")
+        .bind(id)
+        .execute(&state.db)
+        .await?;
+
     Ok(StatusCode::NO_CONTENT)
 }
 

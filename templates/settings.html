@@ -51,7 +51,19 @@
 <dialog id="generate-theme" class="modal" aria-labelledby="generate-title">
 	<h2 id="generate-title">Generate a theme with AI</h2>
 	<form class="stack" hx-post="/settings/generate" hx-indicator="#generate-busy">
-		<p class="muted small">Your default LLM provider creates a color palette from your description.</p>
+		<p class="muted small">An LLM creates a color palette from your description.</p>
+		{%- if providers.is_empty() %}
+		<p class="alert alert-error">No LLM provider configured. <a href="/llm-providers">Add one</a> to generate themes.</p>
+		{%- else %}
+		<div class="field">
+			<label for="g-provider">Model</label>
+			<select class="select" id="g-provider" name="provider_id">
+				{%- for p in providers %}
+				<option value="{{ p.id }}"{% if p.selected %} selected{% endif %}>{{ p.label }}</option>
+				{%- endfor %}
+			</select>
+		</div>
+		{%- endif %}
 		<div class="field">
 			<label for="g-prompt">Theme description</label>
 			<textarea class="textarea" id="g-prompt" name="prompt" rows="4" required placeholder="e.g. a warm sunset theme with orange and purple tones" aria-describedby="g-prompt-help"></textarea>
@@ -66,7 +78,7 @@
 			<span id="generate-busy" class="htmx-indicator muted small"><span class="spinner" style="display:inline-block;vertical-align:-2px"></span> Generating…</span>
 			<span class="spacer"></span>
 			<button type="button" class="btn" data-close-dialog>Cancel</button>
-			<button type="submit" class="btn btn-primary">Generate</button>
+			<button type="submit" class="btn btn-primary"{% if providers.is_empty() %} disabled{% endif %}>Generate</button>
 		</div>
 	</form>
 </dialog>

@@ -116,6 +116,7 @@ async fn handle_ws_chat(
                 )
                 .await
                 {
+                    tracing::error!("Chat in conversation {} failed: {}", conversation_id, e);
                     let _ = sender
                         .send(WsMessage::Text(
                             serde_json::to_string(&WsChatEvent::Error {
@@ -195,6 +196,8 @@ async fn process_chat_message(
         .ok_or_else(|| AppError::BadRequest("No default LLM provider configured".to_string()))?
     };
 
+    crate::routes::conversations::remember_provider(state, conversation_id, provider.id).await?;
+
     // Decrypt API key
     let api_key = provider.api_key(&state.config)?;
 
@@ -206,9 +209,9 @@ async fn process_chat_message(
     .fetch_all(&state.db)
     .await?;
 
-    // Get all tools from connected MCP servers
-    // Only this user's servers: tools of other users' servers must not be offered
-    let own_servers = crate::services::mcp_client::user_server_ids(&state.db, user_id).await?;
+    // Tools of the user's connected MCP servers that are switched on for this
+    // conversation; tools of other users' servers must never be offered
+    let own_servers = crate::routes::conversations::enabled_server_ids(state, user_id, conversation_id).await?;
     let mcp_tools_map = state.mcp_service.list_tools_for_servers(&own_servers).await?;
     let mut all_mcp_tools = Vec::new();
     let mut tool_to_server_map: std::collections::HashMap<String, i64> =
@@ -269,7 +272,9 @@ async fn process_chat_message(
     );
 
     // Tool calling loop
-    let mut max_iterations = 10;
+    let mut rounds_left = crate::services::llm_client::MAX_LLM_ROUNDS;
+    // Set when the rounds ran out; the rounds so far are saved with the answer
+    let mut round_limit_hit = false;
     let mut full_response = String::new();
     let mut stored_tool_calls: Vec<StoredToolCall> = Vec::new();
     let mut executed_tool_calls: std::collections::HashSet<String> = std::collections::HashSet::new();
@@ -281,12 +286,16 @@ async fn process_chat_message(
     let mut sent_until = llm_messages.len().saturating_sub(1);
 
     loop {
-        if max_iterations == 0 {
-            return Err(AppError::Internal(
-                "Too many tool calls, aborting".to_string(),
-            ));
+        if rounds_left == 0 {
+            tracing::warn!(
+                "Chat in conversation {} stopped after {} LLM rounds without a final answer",
+                conversation_id,
+                crate::services::llm_client::MAX_LLM_ROUNDS
+            );
+            round_limit_hit = true;
+            break;
         }
-        max_iterations -= 1;
+        rounds_left -= 1;
 
         let request = crate::services::llm_client::request_preview(
             &model_name,
@@ -353,8 +362,9 @@ async fn process_chat_message(
             .first()
             .ok_or_else(|| AppError::Internal("No response from LLM".to_string()))?;
 
-        // Check if LLM wants to call tools
-        if let Some(tool_calls) = &choice.message.tool_calls {
+        // Check if LLM wants to call tools. Some servers (LM Studio) send
+        // "tool_calls": [] with a final answer; that is no tool request.
+        if let Some(tool_calls) = choice.message.tool_calls.as_ref().filter(|calls| !calls.is_empty()) {
             // Add assistant message with tool calls to history
             llm_messages.push(crate::services::llm_client::Message {
                 role: "assistant".to_string(),
@@ -485,6 +495,8 @@ async fn process_chat_message(
 
     if let Some(error) = &llm_error {
         full_response = format!("The LLM request failed after the tool calls: {error}");
+    } else if round_limit_hit {
+        full_response = crate::services::llm_client::round_limit_message();
     }
 
     // Save assistant message with tool_calls

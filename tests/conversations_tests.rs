@@ -322,3 +322,128 @@ async fn test_delete_conversation_cascades_messages() {
 
     assert_eq!(messages_response.status(), StatusCode::NOT_FOUND);
 }
+
+async fn create_conversation(app: &common::TestApp, token: &str, title: &str) -> i64 {
+    let response = app
+        .client
+        .post(format!("{}/conversations", app.api_url))
+        .bearer_auth(token)
+        .json(&json!({ "title": title }))
+        .send()
+        .await
+        .unwrap();
+    response.json::<serde_json::Value>().await.unwrap()["id"].as_i64().unwrap()
+}
+
+async fn create_server(app: &common::TestApp, token: &str, name: &str) -> i64 {
+    let response = app
+        .client
+        .post(format!("{}/mcp-servers", app.api_url))
+        .bearer_auth(token)
+        .json(&json!({
+            "name": name,
+            "server_type": "stdio",
+            "config": { "command": "uvx", "args": ["mcp-server-git"], "env": {} }
+        }))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::CREATED);
+    response.json::<serde_json::Value>().await.unwrap()["id"].as_i64().unwrap()
+}
+
+async fn conversation_servers(app: &common::TestApp, token: &str, conversation_id: i64) -> Vec<serde_json::Value> {
+    let response = app
+        .client
+        .get(format!("{}/conversations/{}/servers", app.api_url, conversation_id))
+        .bearer_auth(token)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    response.json().await.unwrap()
+}
+
+async fn set_server(app: &common::TestApp, token: &str, conversation_id: i64, server_id: i64, enabled: bool) -> reqwest::Response {
+    app.client
+        .put(format!("{}/conversations/{}/servers/{}", app.api_url, conversation_id, server_id))
+        .bearer_auth(token)
+        .json(&json!({ "enabled": enabled }))
+        .send()
+        .await
+        .unwrap()
+}
+
+#[tokio::test]
+async fn test_conversation_servers_are_on_by_default_and_switch_per_conversation() {
+    let app = setup_test_app().await;
+    let token = app.register_and_login("testuser", "test@example.com", "testpass123").await;
+    let first = create_conversation(&app, &token, "First").await;
+    let second = create_conversation(&app, &token, "Second").await;
+    let server_id = create_server(&app, &token, "Git").await;
+
+    let servers = conversation_servers(&app, &token, first).await;
+    assert_eq!(servers.len(), 1);
+    assert_eq!(servers[0]["id"], server_id);
+    assert_eq!(servers[0]["name"], "Git");
+    assert_eq!(servers[0]["enabled"], true);
+    assert_eq!(servers[0]["connected"], false);
+
+    let off = set_server(&app, &token, first, server_id, false).await;
+    assert_eq!(off.status(), StatusCode::OK);
+    assert_eq!(off.json::<serde_json::Value>().await.unwrap()["enabled"], false);
+    assert_eq!(conversation_servers(&app, &token, first).await[0]["enabled"], false);
+    // Switching off twice is fine
+    assert_eq!(set_server(&app, &token, first, server_id, false).await.status(), StatusCode::OK);
+    // The other conversation keeps the server on
+    assert_eq!(conversation_servers(&app, &token, second).await[0]["enabled"], true);
+
+    assert_eq!(set_server(&app, &token, first, server_id, true).await.status(), StatusCode::OK);
+    assert_eq!(conversation_servers(&app, &token, first).await[0]["enabled"], true);
+
+    // A deleted server disappears from the list
+    set_server(&app, &token, first, server_id, false).await;
+    app.client
+        .delete(format!("{}/mcp-servers/{}", app.api_url, server_id))
+        .bearer_auth(&token)
+        .send()
+        .await
+        .unwrap();
+    assert!(conversation_servers(&app, &token, first).await.is_empty());
+}
+
+#[tokio::test]
+async fn test_conversation_servers_stay_private() {
+    let app = setup_test_app().await;
+    let owner = app.register_and_login("owner", "owner@example.com", "testpass123").await;
+    let other = app.register_and_login("other", "other@example.com", "testpass123").await;
+    let conversation_id = create_conversation(&app, &owner, "Mine").await;
+    let server_id = create_server(&app, &owner, "Git").await;
+    let other_conversation = create_conversation(&app, &other, "Theirs").await;
+
+    // Another user can neither read nor change the switches of this conversation
+    let list = app
+        .client
+        .get(format!("{}/conversations/{}/servers", app.api_url, conversation_id))
+        .bearer_auth(&other)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(list.status(), StatusCode::NOT_FOUND);
+    assert_eq!(set_server(&app, &other, conversation_id, server_id, false).await.status(), StatusCode::NOT_FOUND);
+    // nor switch the owner's server in their own conversation
+    assert_eq!(set_server(&app, &other, other_conversation, server_id, false).await.status(), StatusCode::NOT_FOUND);
+    // and never see the owner's servers
+    assert!(conversation_servers(&app, &other, other_conversation).await.is_empty());
+
+    // Unknown server
+    assert_eq!(set_server(&app, &owner, conversation_id, 999_999, false).await.status(), StatusCode::NOT_FOUND);
+    // Without a token
+    let anonymous = app
+        .client
+        .get(format!("{}/conversations/{}/servers", app.api_url, conversation_id))
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(anonymous.status(), StatusCode::UNAUTHORIZED);
+}

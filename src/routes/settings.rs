@@ -83,6 +83,19 @@ pub(crate) async fn update_settings(
     get_settings(State(state), Extension(AuthUser { user_id, username: String::new() })).await
 }
 
+/// The JSON object in a model answer: models often wrap it in a ```json fence,
+/// add a sentence around it, or put their thinking in <think> tags first
+fn theme_json(text: &str) -> &str {
+    let text = match text.rfind("</think>") {
+        Some(end) => &text[end + "</think>".len()..],
+        None => text,
+    };
+    match (text.find('{'), text.rfind('}')) {
+        (Some(start), Some(end)) if start < end => &text[start..=end],
+        _ => text.trim(),
+    }
+}
+
 // Generate theme using LLM
 pub(crate) async fn generate_theme(
     State(state): State<AppState>,
@@ -114,16 +127,22 @@ For light themes: base_100 should be very light (near white), base_300 darker
 For dark themes: base_100 should be dark (near black), base_300 lighter
 Ensure good contrast for readability."##;
 
-    // Get user's default LLM provider
+    // The chosen LLM provider, or the user's default one
     use crate::models::llm_provider::LlmProvider;
 
-    let provider = sqlx::query_as::<_, LlmProvider>(
-        "SELECT * FROM llm_providers WHERE user_id = ? AND is_default = 1 LIMIT 1",
-    )
-    .bind(user_id)
-    .fetch_optional(&state.db)
-    .await?
-    .ok_or_else(|| AppError::BadRequest("No default LLM provider configured".to_string()))?;
+    let provider = match req.provider_id {
+        Some(provider_id) => sqlx::query_as::<_, LlmProvider>("SELECT * FROM llm_providers WHERE id = ? AND user_id = ?")
+            .bind(provider_id)
+            .bind(user_id)
+            .fetch_optional(&state.db)
+            .await?
+            .ok_or_else(|| AppError::NotFound("LLM provider not found".to_string()))?,
+        None => sqlx::query_as::<_, LlmProvider>("SELECT * FROM llm_providers WHERE user_id = ? AND is_default = 1 LIMIT 1")
+            .bind(user_id)
+            .fetch_optional(&state.db)
+            .await?
+            .ok_or_else(|| AppError::BadRequest("No LLM provider chosen and no default configured".to_string()))?,
+    };
 
     // Decrypt API key
     let api_key = provider.api_key(&state.config)?;
@@ -150,20 +169,27 @@ Ensure good contrast for readability."##;
         },
     ];
 
-    // Call LLM using generic client
+    // No max_tokens: thinking models (Qwen, GPT-OSS) spend hundreds of tokens
+    // before the JSON and were cut off at the old limit of 1024
     let completion = llm_client
-        .chat_completion(messages, None, Some(0.7), Some(1024))
+        .chat_completion(messages, None, Some(0.7), None)
         .await?;
 
-    // Extract response text
-    let response_text = completion.choices
-        .get(0)
+    let choice = completion.choices.first();
+    let response_text = choice
         .and_then(|choice| choice.message.content.clone())
-        .ok_or_else(|| AppError::BadRequest("Empty response from LLM".to_string()))?;
+        .unwrap_or_default();
+    if choice.and_then(|c| c.finish_reason.as_deref()) == Some("length") {
+        return Err(AppError::BadRequest(
+            "The model stopped before the theme was complete (it reached its token limit). Try another model.".to_string(),
+        ));
+    }
+    if response_text.trim().is_empty() {
+        return Err(AppError::BadRequest("The model returned no theme. Try another model.".to_string()));
+    }
 
-    // Parse JSON response
-    let mut theme: CustomTheme = serde_json::from_str(&response_text)
-        .map_err(|e| AppError::BadRequest(format!("Failed to parse theme: {}", e)))?;
+    let mut theme: CustomTheme = serde_json::from_str(theme_json(&response_text))
+        .map_err(|e| AppError::BadRequest(format!("The model did not return a valid theme: {e}")))?;
 
     // Override name if user provided one
     if let Some(custom_name) = req.custom_name {
@@ -262,4 +288,19 @@ pub(crate) async fn delete_theme(
         }),
     )
     .await
+}
+
+#[cfg(test)]
+mod tests {
+    use super::theme_json;
+
+    #[test]
+    fn finds_the_theme_json_in_model_answers() {
+        let plain = r#"{"name":"A"}"#;
+        assert_eq!(theme_json(plain), plain);
+        assert_eq!(theme_json("```json\n{\"name\":\"A\"}\n```"), plain);
+        assert_eq!(theme_json("Here is your theme:\n{\"name\":\"A\"}\nEnjoy!"), plain);
+        assert_eq!(theme_json("<think>maybe {colors}</think>\n{\"name\":\"A\"}"), plain);
+        assert_eq!(theme_json("no json"), "no json");
+    }
 }

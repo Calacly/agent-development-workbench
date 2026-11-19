@@ -3,6 +3,7 @@
 <header class="shell-header">
 	<div class="shell-header-inner">
 		<a class="brand" href="/dashboard">MCP Client</a>
+		<span class="app-version faint tiny nums" title="Version">v{{ layout.version }}</span>
 		<nav class="nav" aria-label="Main">
 			{%- for item in layout.nav %}
 			<a href="{{ item.href }}"{% if item.active %} aria-current="page"{% endif %}>{{ item.label }}</a>

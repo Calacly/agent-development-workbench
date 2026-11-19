@@ -149,12 +149,14 @@ pub struct Layout {
     pub username: String,
     pub theme_css: String,
     pub nav: Vec<NavItem>,
+    /// App version from Cargo.toml, shown in the header
+    pub version: &'static str,
 }
 
 impl Layout {
     /// Layout for pages without a signed-in user (default theme)
     pub fn anonymous() -> Self {
-        Layout { username: String::new(), theme_css: String::new(), nav: Vec::new() }
+        Layout { username: String::new(), theme_css: String::new(), nav: Vec::new(), version: env!("CARGO_PKG_VERSION") }
     }
 
     pub async fn for_user(state: &AppState, user: &AuthUser, active: &str) -> WebResult<Self> {
@@ -179,7 +181,7 @@ impl Layout {
         .into_iter()
         .map(|(href, label)| NavItem { href, label, active: href == active })
         .collect();
-        Ok(Layout { username: user.username.clone(), theme_css, nav })
+        Ok(Layout { username: user.username.clone(), theme_css, nav, version: env!("CARGO_PKG_VERSION") })
     }
 }
 
