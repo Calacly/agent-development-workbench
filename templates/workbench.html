@@ -1,0 +1,77 @@
+{% extends "app.html" %}
+{% block title %}Agent Workbench · MCP Client{% endblock %}
+{% block content %}
+<div class="page-header">
+	<div>
+		<h1>Agent Development Workbench</h1>
+		<p>Replay one sanitized event stream as a debugger or a guided architecture lesson.</p>
+	</div>
+	<span class="pill pill-info">Synthetic evidence</span>
+</div>
+
+<p class="alert workbench-truth">
+	These traces are explicitly synthetic. Learn-mode explanations are derived from selected events and do not expose hidden model reasoning.
+</p>
+
+<section class="workbench-controls panel" aria-label="Trace controls">
+	<div class="field">
+		<label for="workbench-fixture">Trace fixture</label>
+		<select class="select" id="workbench-fixture" disabled>
+			<option>Loading fixtures…</option>
+		</select>
+	</div>
+	<fieldset class="choices-inline">
+		<legend>View</legend>
+		<label><input type="radio" name="workbench-mode" value="debug" checked> Debug</label>
+		<label><input type="radio" name="workbench-mode" value="learn"> Learn</label>
+	</fieldset>
+	<div class="workbench-run-summary" id="workbench-run-summary" aria-live="polite"></div>
+</section>
+
+<section class="panel workbench-chart-panel" aria-labelledby="timeline-title">
+	<div class="row">
+		<div class="spacer">
+			<h2 id="timeline-title">Correlated execution timeline</h2>
+			<p class="muted small">
+				Dashed lines connect events to their causal parents. Select an event to highlight its lineage and inspect its sanitized details.
+			</p>
+		</div>
+		<div class="workbench-legend" aria-label="Status legend">
+			<span><i class="status-succeeded"></i>Succeeded</span>
+			<span><i class="status-failed"></i>Failed</span>
+			<span><i class="status-running"></i>Running</span>
+			<span><i class="status-skipped"></i>Skipped</span>
+		</div>
+	</div>
+	<div class="workbench-chart" id="workbench-chart">
+		<svg id="workbench-timeline" role="img" aria-labelledby="timeline-title"></svg>
+	</div>
+</section>
+
+<section class="workbench-detail-grid" aria-live="polite">
+	<article class="panel" id="workbench-debug">
+		<h2>Debug details</h2>
+		<p class="muted small">The stored envelope after redaction.</p>
+		<pre class="code" id="workbench-event-json">Select an event.</pre>
+	</article>
+	<article class="panel" id="workbench-learn" hidden>
+		<h2>Learn from this event</h2>
+		<p class="workbench-learn-summary" id="workbench-learn-summary">Select an event.</p>
+		<p class="muted" id="workbench-learn-significance"></p>
+		<p class="faint small" id="workbench-learn-evidence"></p>
+	</article>
+	<aside class="panel">
+		<h2>Trace safety</h2>
+		<dl class="workbench-safety">
+			<div><dt>Schema</dt><dd id="workbench-schema">–</dd></div>
+			<div><dt>Source</dt><dd id="workbench-source">–</dd></div>
+			<div><dt>Redactions</dt><dd id="workbench-redactions">–</dd></div>
+		</dl>
+	</aside>
+</section>
+
+<p class="alert alert-error" id="workbench-error" role="alert"></p>
+
+<script src="/static/vendor/d3-7.9.0.min.js" defer></script>
+<script src="/static/workbench.js" defer></script>
+{% endblock %}

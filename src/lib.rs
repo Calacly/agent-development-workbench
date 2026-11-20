@@ -9,6 +9,7 @@ pub mod routes;
 pub mod sandbox;
 pub mod services;
 pub mod web;
+pub mod workbench;
 
 use services::mcp_client::McpClientService;
 use std::sync::Arc;
