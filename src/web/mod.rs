@@ -12,6 +12,7 @@ mod servers;
 mod settings;
 pub mod theme;
 pub mod view;
+mod workbench;
 
 use askama::Template;
 use axum::{
@@ -43,6 +44,7 @@ pub fn routes(state: AppState) -> Router<AppState> {
         .merge(servers::routes())
         .merge(chat::routes())
         .merge(settings::routes())
+        .merge(workbench::routes())
         .layer(middleware::from_fn_with_state(state, require_web_auth));
 
     Router::new()
@@ -177,6 +179,7 @@ impl Layout {
             ("/llm-providers", "LLM Providers"),
             ("/mcp-servers", "MCP Servers"),
             ("/chat", "Chat"),
+            ("/workbench", "Workbench"),
         ]
         .into_iter()
         .map(|(href, label)| NavItem { href, label, active: href == active })

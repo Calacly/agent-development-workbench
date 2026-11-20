@@ -40,6 +40,10 @@ async fn pages_redirect_to_login_without_a_session() {
     assert_eq!(dashboard.status(), StatusCode::SEE_OTHER);
     assert_eq!(dashboard.headers()[header::LOCATION], "/login?next=/dashboard");
 
+    let workbench = client.get(format!("{}/workbench", base_url())).send().await.unwrap();
+    assert_eq!(workbench.status(), StatusCode::SEE_OTHER);
+    assert_eq!(workbench.headers()[header::LOCATION], "/login?next=/workbench");
+
     // htmx requests get HX-Redirect so the whole page navigates
     let fragment = client.post(format!("{}/llm-providers/test", base_url())).header("HX-Request", "true").send().await.unwrap();
     assert_eq!(fragment.headers()["HX-Redirect"], "/login");
@@ -95,6 +99,21 @@ async fn signed_in_pages_render_with_the_session_cookie() {
     // The JSON API accepts the same cookie (used by same-origin fetch and the chat WebSocket)
     let api = client.get(format!("{}/api/v1/llm-providers", base_url())).header(header::COOKIE, &cookie).send().await.unwrap();
     assert_eq!(api.status(), StatusCode::OK);
+
+    let workbench = client.get(format!("{}/workbench", base_url())).header(header::COOKIE, &cookie).send().await.unwrap();
+    assert_eq!(workbench.status(), StatusCode::OK);
+    let html = workbench.text().await.unwrap();
+    assert!(html.contains("Agent Development Workbench"), "{html}");
+    assert!(html.contains("Synthetic evidence"), "{html}");
+    assert!(html.contains(r#"href="/workbench" aria-current="page""#), "{html}");
+
+    let data = client.get(format!("{}/workbench/data", base_url())).header(header::COOKIE, &cookie).send().await.unwrap();
+    assert_eq!(data.status(), StatusCode::OK);
+    let body: serde_json::Value = data.json().await.unwrap();
+    assert_eq!(body["event_schema_version"], "1.0");
+    assert_eq!(body["fixtures"].as_array().unwrap().len(), 2);
+    assert!(body.to_string().contains("VECTOR_TIMEOUT"));
+    assert!(!body.to_string().contains("sk-private"));
 }
 
 #[tokio::test]
@@ -150,6 +169,9 @@ async fn static_files_are_served_from_the_binary() {
     let htmx = client.get(format!("{}/static/vendor/htmx-2.0.11.min.js", base_url())).send().await.unwrap();
     assert_eq!(htmx.status(), StatusCode::OK);
     assert!(htmx.headers()[header::CACHE_CONTROL].to_str().unwrap().contains("immutable"));
+    let d3 = client.get(format!("{}/static/vendor/d3-7.9.0.min.js", base_url())).send().await.unwrap();
+    assert_eq!(d3.status(), StatusCode::OK);
+    assert!(d3.headers()[header::CACHE_CONTROL].to_str().unwrap().contains("immutable"));
     let missing = client.get(format!("{}/static/missing.js", base_url())).send().await.unwrap();
     assert_eq!(missing.status(), StatusCode::NOT_FOUND);
 }

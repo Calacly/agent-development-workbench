@@ -2,6 +2,10 @@
 
 A multi-user web application for interacting with AI via the Model Context Protocol (MCP).
 
+This repository is the starting point for the Agent Development Workbench.
+The upstream provenance, adoption constraints, and clean test baseline are
+recorded in [`docs/upstream-baseline.md`](docs/upstream-baseline.md).
+
 ## Features
 
 - Multi-user authentication system
@@ -12,6 +16,7 @@ A multi-user web application for interacting with AI via the Model Context Proto
 - Chat interface with LLM integration
 - Resource and prompt browsing
 - Comprehensive logging and debugging
+- Synthetic agent-run workbench with correlated debug and learn views
 
 ## Technology Stack
 
@@ -88,3 +93,6 @@ cargo test -- --ignored           # tests that need uv and network access
 MIT, see [LICENSE](LICENSE).
 
 `static/vendor/htmx-2.0.11.min.js` is htmx, licensed under the Zero-Clause BSD license.
+
+`static/vendor/d3-7.9.0.min.js` is D3, licensed under the ISC license. Its
+license is preserved in `static/vendor/d3-7.9.0.LICENSE`.
